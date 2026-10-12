@@ -1,4 +1,7 @@
+import { styleguideEn } from './styleguide'
+
 export const en = {
+  styleguide: styleguideEn,
   app: {
     name: 'SGEn',
     title: 'Energy management',
@@ -11,6 +14,7 @@ export const en = {
     reference: 'Reference: {{id}}',
   },
   modules: {
+    styleguide: 'Style guide',
     login: 'Sign in',
     organizations: 'Organizations',
     newOrganization: 'New organization',

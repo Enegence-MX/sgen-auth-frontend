@@ -36,39 +36,6 @@
 .search input {
   margin: 0;
 }
-.tableWrap {
-  overflow-x: auto;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-panel);
-}
-.tableWrap table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 580px;
-  text-align: left;
-}
-.tableWrap caption {
-  text-align: left;
-  padding: 1rem;
-  color: var(--color-text-muted);
-}
-.tableWrap th {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  background: var(--color-surface);
-}
-.tableWrap td,
-.tableWrap th {
-  padding: 1rem;
-  border-top: 1px solid var(--color-border);
-}
-.tableWrap td:first-child {
-  font-weight: 600;
-  max-width: 450px;
-  overflow-wrap: anywhere;
-}
 .badge {
   display: inline-block;
   font-size: 0.8rem;

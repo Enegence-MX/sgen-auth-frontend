@@ -5,7 +5,7 @@ import { Notice } from './Notice'
 export function ErrorNotice({ error }: Readonly<{ error: unknown }>) {
   const { t } = useTranslation()
   return (
-    <Notice variant="warning" role="alert">
+    <Notice variant="error" role="alert">
       <p>{translateError(error, t)}</p>
       {error instanceof ApiError && error.requestId && (
         <small>{t('app.reference', { id: error.requestId })}</small>

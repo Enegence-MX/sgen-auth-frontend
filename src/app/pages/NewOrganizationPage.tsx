@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../services/services-context'
 import { TextField } from '../../shared/ui/TextField'
+import { TextArea } from '../../shared/ui/TextArea'
 import { Button } from '../../shared/ui/Button'
 import { Notice } from '../../shared/ui/Notice'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
@@ -74,10 +75,8 @@ export function NewOrganizationPage() {
             onChange={(event) => change('sectorIndustrial', event.target.value)}
             maxLength={150}
           />
-          <label htmlFor="fiscal-address">
-            {t('organizations.address')} ({t('organizations.optional')})
-          </label>
-          <textarea
+          <TextArea
+            label={`${t('organizations.address')} (${t('organizations.optional')})`}
             id="fiscal-address"
             value={fields.domicilioFiscal}
             onChange={(event) => change('domicilioFiscal', event.target.value)}

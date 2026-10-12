@@ -1,5 +1,7 @@
 import type { TranslationCatalog } from './en'
+import { styleguideEs } from './styleguide'
 export const es = {
+  styleguide: styleguideEs,
   app: {
     name: 'SGEn',
     title: 'Gestión de energía',
@@ -12,6 +14,7 @@ export const es = {
     reference: 'Referencia: {{id}}',
   },
   modules: {
+    styleguide: 'Guía de estilos',
     login: 'Inicio de sesión',
     organizations: 'Organizaciones',
     newOrganization: 'Nueva organización',

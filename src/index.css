@@ -1,63 +1,71 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 @import './shared/styles/tokens.css';
+@import './shared/styles/tailwind.css';
 
-:root {
-  font-family: var(--font-family-body);
-  line-height: var(--line-height-body);
-  font-weight: var(--font-weight-regular);
-  color-scheme: light;
-  color: var(--color-text);
-  background-color: var(--color-background);
-}
+@layer base {
+  :root {
+    font-family: var(--font-family-body);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-regular);
+    color-scheme: light;
+    color: var(--color-text);
+    background-color: var(--color-background);
+  }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: var(--color-background);
-}
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: var(--color-background);
+  }
 
-#root {
-  min-height: 100vh;
-}
+  /* The guide's navigation also fits narrow viewports with visible scrollbars. */
+  body:has(#guide-main) {
+    min-width: 0;
+  }
 
-* {
-  box-sizing: border-box;
-}
-h1 {
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-}
-h2 {
-  font-size: 1.25rem;
-}
-a {
-  color: var(--color-primary);
-}
-fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  min-width: 0;
-}
-select,
-textarea {
-  font: inherit;
-  color: var(--color-text-strong);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 0.7rem;
-  width: 100%;
-  margin: 0.5rem 0 1rem;
-}
-p {
-  overflow-wrap: anywhere;
-}
-a:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-ring-offset);
+  #root {
+    min-height: 100vh;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  h1 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  a {
+    color: var(--color-primary);
+  }
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+  }
+  select,
+  textarea {
+    font: inherit;
+    color: var(--color-text-strong);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0.7rem;
+    width: 100%;
+    margin: 0.5rem 0 1rem;
+  }
+  p {
+    overflow-wrap: anywhere;
+  }
+  a:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
 }

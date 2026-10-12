@@ -13,6 +13,11 @@ import type { RouteMetadata } from './route-metadata'
 export function createAppRoutes(services: Services): RouteObject[] {
   return [
     {
+      path: '/styleguide',
+      lazy: async () => ({ Component: (await import('../pages/StyleguidePage')).StyleguidePage }),
+      handle: { module: 'styleguide' } satisfies RouteMetadata,
+    },
+    {
       path: '/',
       element: <App services={services} />,
       children: [

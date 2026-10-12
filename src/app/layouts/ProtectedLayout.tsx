@@ -5,7 +5,7 @@ import { useServices, useSession } from '../services/services-context'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { Button } from '../../shared/ui/Button'
 import { Avatar } from '../../shared/ui/Avatar'
-import { Building2, User, LogOut, Menu } from 'lucide-react'
+import { Building2, User, LogOut, Menu, Palette } from 'lucide-react'
 import styles from './ProtectedLayout.module.css'
 
 export function ProtectedLayout() {
@@ -86,6 +86,10 @@ export function ProtectedLayout() {
           <NavLink to="/organizations">
             <Building2 size={20} />
             <span>{platform ? t('organizations.title') : t('organizations.current')}</span>
+          </NavLink>
+          <NavLink to="/styleguide">
+            <Palette size={20} />
+            <span>{t('modules.styleguide')}</span>
           </NavLink>
         </nav>
 

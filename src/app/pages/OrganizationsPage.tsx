@@ -5,6 +5,8 @@ import { useServices, useSession } from '../services/services-context'
 import { useResource } from '../hooks/use-resource'
 import { Button } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/TextField'
+import { Table } from '../../shared/ui/Table'
+import { Badge } from '../../shared/ui/Badge'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import styles from './Workspace.module.css'
 
@@ -65,40 +67,37 @@ function PlatformOrganizations() {
       )}
       {result.value && (
         <>
-          <div className={styles.tableWrap}>
-            <table>
-              <caption>{t('organizations.total', { count: result.value.meta.total })}</caption>
-              <thead>
-                <tr>
-                  <th scope="col">{t('organizations.legalName')}</th>
-                  <th scope="col">{t('organizations.taxId')}</th>
-                  <th scope="col">{t('organizations.status')}</th>
-                  <th scope="col">{t('organizations.view')}</th>
+          <Table caption={t('organizations.total', { count: result.value.meta.total })}>
+            <thead>
+              <tr>
+                <th scope="col">{t('organizations.legalName')}</th>
+                <th scope="col">{t('organizations.taxId')}</th>
+                <th scope="col">{t('organizations.status')}</th>
+                <th scope="col">{t('organizations.view')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.value.data.map((item) => (
+                <tr key={item.id}>
+                  <td className="max-w-[450px] font-semibold text-ink [overflow-wrap:anywhere]">{item.razonSocial}</td>
+                  <td>{item.rfcMaestro}</td>
+                  <td>
+                    <Badge variant={item.active ? 'success' : 'warning'}>
+                      {t(item.active ? 'organizations.active' : 'organizations.inactive')}
+                    </Badge>
+                  </td>
+                  <td>
+                    <Link
+                      to={`/organizations/${item.id}`}
+                      aria-label={`${t('organizations.view')}: ${item.razonSocial}`}
+                    >
+                      {t('organizations.view')}
+                    </Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {result.value.data.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.razonSocial}</td>
-                    <td>{item.rfcMaestro}</td>
-                    <td>
-                      <span className={styles.badge} data-active={item.active}>
-                        {t(item.active ? 'organizations.active' : 'organizations.inactive')}
-                      </span>
-                    </td>
-                    <td>
-                      <Link
-                        to={`/organizations/${item.id}`}
-                        aria-label={`${t('organizations.view')}: ${item.razonSocial}`}
-                      >
-                        {t('organizations.view')}
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </Table>
           {result.value.data.length === 0 && <p className={styles.empty}>{t('organizations.empty')}</p>}
           <div className={styles.pagination}>
             <Button disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
