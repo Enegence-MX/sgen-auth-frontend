@@ -44,7 +44,8 @@ describe('language configuration and catalogs', () => {
       const translation = spanish[key] ?? ''
       expect(translation.trim(), key).not.toBe('')
       expect(parameters(translation), key).toEqual(parameters(value))
-      expect(value + translation, key).not.toMatch(/\p{Extended_Pictographic}/u)
+      // Copyright text is not an emoji, even though Unicode includes it in this property.
+      expect((value + translation).replaceAll('©', ''), key).not.toMatch(/\p{Extended_Pictographic}/u)
     }
     expect(Object.keys(createI18n().options.resources ?? {})).toEqual(['en', 'es'])
   })

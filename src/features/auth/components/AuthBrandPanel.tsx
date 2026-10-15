@@ -5,7 +5,6 @@ export function AuthBrandPanel() {
   const { t } = useTranslation()
   return (
     <div className={styles.panel}>
-      {/* Geometría de fondo en SVG puro */}
       <svg width="600" height="900" viewBox="0 0 600 900" className={styles.backgroundSvg} aria-hidden="true" preserveAspectRatio="xMidYMax slice">
         <polygon points="260,900 600,704 600,804 433,900" fill="#1F2757"></polygon>
         <polygon points="120,900 600,623 600,690 237,900" fill="#23306E"></polygon>
@@ -16,7 +15,6 @@ export function AuthBrandPanel() {
       
       <div className={styles.header}>
         <div className={styles.logoBox}>
-          {/* TODO: Reemplazar src con asset oficial "símbolo Enegence" */}
           <img src="/assets/logo-simbolo.png" alt="" className={styles.logoImage} onError={(e) => e.currentTarget.style.display = 'none'} />
         </div>
         <div className={styles.brandName}>ENEGENCE</div>

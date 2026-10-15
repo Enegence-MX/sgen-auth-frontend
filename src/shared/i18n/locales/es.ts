@@ -3,6 +3,19 @@ import { styleguideEs } from './styleguide'
 export const es = {
   styleguide: styleguideEs,
   app: {
+    skipContent: 'Saltar al contenido',
+    openNavigation: 'Abrir navegación',
+    closeNavigation: 'Cerrar navegación',
+    expandNavigation: 'Expandir navegación',
+    collapseNavigation: 'Contraer navegación',
+    userMenu: 'Menú de usuario',
+    securityAccess: 'Seguridad y acceso',
+    theme: 'Tema',
+    light: 'Claro',
+    dark: 'Oscuro',
+    showPassword: 'Mostrar contraseña',
+    hidePassword: 'Ocultar contraseña',
+
     name: 'SGEn',
     title: 'Gestión de energía',
     documentTitle: '{{title}} | {{module}}',

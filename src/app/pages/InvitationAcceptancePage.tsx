@@ -3,6 +3,10 @@ import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useServices } from '../services/services-context'
 import { useResource } from '../hooks/use-resource'
+import { Check } from 'lucide-react'
+import { Radio } from '../../shared/ui/Checkbox'
+import { LinkButton } from '../../shared/ui/LinkButton'
+import { Spinner } from '../../shared/ui/Loading'
 import { Button } from '../../shared/ui/Button'
 import { Card } from '../../shared/ui/Card'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
@@ -75,7 +79,7 @@ function InvitationMfaCode({
 }: Readonly<InvitationMfaCodeProps>) {
   if (!visible) return null
   return (
-    <div className="grid gap-3">
+    <div className="grid min-w-0 grid-cols-1 gap-3">
       {!challengeToken ? (
         <Button type="button" variant="secondary" loading={sending} onClick={onSend}>
           {sending ? sendingLabel : sendLabel}
@@ -83,7 +87,7 @@ function InvitationMfaCode({
       ) : (
         <>
           <Notice>{sentMessage}</Notice>
-          <TextField
+          <div><TextField
             label={codeLabel}
             inputMode="numeric"
             autoComplete="one-time-code"
@@ -93,7 +97,7 @@ function InvitationMfaCode({
             required
             value={code}
             onChange={(event) => onCodeChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
-          />
+          /></div>
           <Button type="button" variant="secondary" loading={sending} onClick={onSend}>
             {resendLabel}
           </Button>
@@ -222,7 +226,7 @@ export function InvitationAcceptancePage() {
   if (accepting) mfaSubmitLabel = t('invitation.accepting')
 
   return (
-    <div className="min-h-dvh bg-subtle text-body">
+    <div className="min-h-dvh bg-canvas text-body">
       <header className="flex min-h-16 flex-wrap items-center justify-between gap-4 border-0 border-b border-solid border-line bg-panel px-4 py-3 sm:px-8">
         <div className="flex items-center gap-3">
           <img src="/assets/logo-simbolo.png" alt="" className="h-8 w-8 object-contain" />
@@ -247,7 +251,7 @@ export function InvitationAcceptancePage() {
               markerClass = 'bg-brand text-on-brand'
             } else if (complete) {
               progressClass = 'text-positive'
-              markerClass = 'bg-positive text-white'
+              markerClass = 'bg-positive-surface text-positive'
             }
             return (
               <li
@@ -258,7 +262,7 @@ export function InvitationAcceptancePage() {
                 <span
                   className={`flex size-5 items-center justify-center rounded-full text-[11px] ${markerClass}`}
                 >
-                  {complete ? '✓' : index + 1}
+                  {complete ? <Check size={14} aria-hidden="true" /> : index + 1}
                 </span>
                 {label}
               </li>
@@ -271,13 +275,11 @@ export function InvitationAcceptancePage() {
         <section className="grid min-w-0 gap-5">
           {invitationResource.loading && (
             <Card>
-              <p role="status" className="m-0">
-                {t('invitation.loading')}
-              </p>
+              <Spinner label={t('invitation.loading')} />
             </Card>
           )}
           {invitationResource.error !== undefined && (
-            <Card className="grid gap-4">
+            <Card className="grid min-w-0 grid-cols-1 gap-4">
               <ErrorNotice error={invitationResource.error} />
               <Button variant="secondary" onClick={invitationResource.retry}>
                 {t('app.retry')}
@@ -302,8 +304,8 @@ export function InvitationAcceptancePage() {
               <p className="mt-2 mb-5 text-sm leading-relaxed text-body">
                 {t('invitation.createAccountHint')}
               </p>
-              <form className="grid gap-4" onSubmit={submitPassword}>
-                <TextField
+              <form className="grid min-w-0 grid-cols-1 gap-4" onSubmit={submitPassword}>
+                <div><TextField
                   label={t('invitation.fullName')}
                   autoComplete="name"
                   maxLength={255}
@@ -313,8 +315,8 @@ export function InvitationAcceptancePage() {
                     setFullName(event.target.value)
                     setFormError('')
                   }}
-                />
-                <TextField
+                /></div>
+                <div><TextField
                   label={t('invitation.password')}
                   type="password"
                   autoComplete="new-password"
@@ -329,8 +331,8 @@ export function InvitationAcceptancePage() {
                     setPassword(event.target.value)
                     setFormError('')
                   }}
-                />
-                <TextField
+                /></div>
+                <div><TextField
                   label={t('invitation.confirmPassword')}
                   type="password"
                   autoComplete="new-password"
@@ -341,7 +343,7 @@ export function InvitationAcceptancePage() {
                     setPasswordConfirmation(event.target.value)
                     setFormError('')
                   }}
-                />
+                /></div>
                 {formError && (
                   <Notice variant="error" role="alert">
                     {formError}
@@ -362,7 +364,7 @@ export function InvitationAcceptancePage() {
                   ? t('invitation.existingAccountHint')
                   : t('invitation.mfaSetupHint')}
               </p>
-              <form className="grid gap-5" onSubmit={submitMfa}>
+              <form className="grid min-w-0 grid-cols-1 gap-5" onSubmit={submitMfa}>
                 {!invitation.mfaWaiver || invitation.mfaRequired ? (
                   <Notice>
                     {invitation.hasMfa ? t('invitation.mfaEnabled') : t('invitation.mfaRequired')}
@@ -373,32 +375,8 @@ export function InvitationAcceptancePage() {
                       <legend className="mb-1 text-sm font-semibold text-ink">
                         {t('invitation.mfaChoice')}
                       </legend>
-                      <label className="flex cursor-pointer items-start gap-3 rounded-control border border-solid border-line p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
-                        <input
-                          type="radio"
-                          name="invitation-mfa-choice"
-                          value="ENABLE"
-                          checked={mfaChoice === 'ENABLE'}
-                          onChange={() => setMfaChoice('ENABLE')}
-                          className="mt-1 accent-brand"
-                        />
-                        <span className="text-sm font-semibold text-ink">
-                          {t('invitation.mfaEnable')}
-                        </span>
-                      </label>
-                      <label className="flex cursor-pointer items-start gap-3 rounded-control border border-solid border-line p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
-                        <input
-                          type="radio"
-                          name="invitation-mfa-choice"
-                          value="WAIVE"
-                          checked={mfaChoice === 'WAIVE'}
-                          onChange={() => setMfaChoice('WAIVE')}
-                          className="mt-1 accent-brand"
-                        />
-                        <span className="text-sm font-semibold text-ink">
-                          {t('invitation.mfaWaive')}
-                        </span>
-                      </label>
+                      <Radio name="invitation-mfa-choice" value="ENABLE" checked={mfaChoice === 'ENABLE'} onChange={() => setMfaChoice('ENABLE')} label={t('invitation.mfaEnable')} containerClassName="rounded-control border border-solid border-line p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft" />
+                      <Radio name="invitation-mfa-choice" value="WAIVE" checked={mfaChoice === 'WAIVE'} onChange={() => setMfaChoice('WAIVE')} label={t('invitation.mfaWaive')} containerClassName="rounded-control border border-solid border-line p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft" />
                     </fieldset>
                     {mfaChoice === 'WAIVE' && (
                       <Notice variant="warning">{invitation.mfaWaiver.text}</Notice>
@@ -412,41 +390,8 @@ export function InvitationAcceptancePage() {
                       {t('invitation.mfaMethod')}
                     </legend>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <label className="flex min-h-20 cursor-pointer items-start gap-3 rounded-control border-2 border-solid border-brand bg-brand-soft p-3">
-                        <input
-                          type="radio"
-                          name="invitation-mfa-method"
-                          value="EMAIL"
-                          checked
-                          readOnly
-                          className="mt-1 accent-brand"
-                        />
-                        <span>
-                          <span className="block text-sm font-semibold text-ink">
-                            {t('invitation.emailMethod')}
-                          </span>
-                          <span className="text-xs text-body">
-                            {t('invitation.emailMethodHint')}
-                          </span>
-                        </span>
-                      </label>
-                      <label className="flex min-h-20 items-start gap-3 rounded-control border border-solid border-line bg-panel p-3 opacity-60">
-                        <input
-                          type="radio"
-                          name="invitation-mfa-method"
-                          value="TOTP"
-                          disabled
-                          className="mt-1 accent-brand"
-                        />
-                        <span>
-                          <span className="block text-sm font-semibold text-ink">
-                            {t('invitation.authenticatorApp')}
-                          </span>
-                          <span className="text-xs text-body">
-                            {t('invitation.authenticatorAppComingSoon')}
-                          </span>
-                        </span>
-                      </label>
+                      <Radio name="invitation-mfa-method" value="EMAIL" checked readOnly label={t('invitation.emailMethod')} description={t('invitation.emailMethodHint')} containerClassName="rounded-control border border-solid border-brand bg-brand-soft p-3" />
+                      <Radio name="invitation-mfa-method" value="TOTP" disabled label={t('invitation.authenticatorApp')} description={t('invitation.authenticatorAppComingSoon')} containerClassName="rounded-control border border-solid border-line bg-panel p-3" />
                     </div>
                   </fieldset>
                 )}
@@ -493,7 +438,7 @@ export function InvitationAcceptancePage() {
           )}
 
           {currentStep === 'done' && accepted && (
-            <Card className="grid gap-4">
+            <Card className="grid min-w-0 grid-cols-1 gap-4">
               <Notice variant="success" role="status">
                 {t('invitation.success')}
               </Notice>
@@ -510,37 +455,29 @@ export function InvitationAcceptancePage() {
                   accepted.mfa === 'ENABLED' ? 'invitation.successMfa' : 'invitation.successNoMfa',
                 )}
               </p>
-              <Link
-                className="inline-flex min-h-11 items-center justify-center rounded-control bg-brand px-4 py-2.5 text-sm font-semibold text-on-brand no-underline hover:bg-brand-hover"
-                to="/login"
-              >
-                {t('invitation.goToLogin')}
-              </Link>
+              <LinkButton to="/login">{t('invitation.goToLogin')}</LinkButton>
             </Card>
           )}
         </section>
 
         {invitation && (
-          <aside className="grid gap-4">
-            <Card
-              className="border-0 text-white"
-              style={{ backgroundColor: 'var(--color-brand-navy)' }}
-            >
-              <p className="m-0 text-xs font-bold tracking-widest text-lime-300 uppercase">
+          <aside className="grid min-w-0 grid-cols-1 gap-4">
+            <Card>
+              <p className="m-0 text-xs font-bold tracking-widest text-brand uppercase">
                 {t('invitation.organizationPolicy')}
               </p>
-              <h2 className="mt-3 mb-5 font-heading text-lg font-semibold">
+              <h2 className="mt-3 mb-5 font-heading text-lg font-semibold text-ink">
                 {invitation.legalName}
               </h2>
-              <dl className="m-0 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-3 text-sm text-white/80">
+              <dl className="m-0 grid grid-cols-2 gap-x-4 gap-y-3 text-sm text-body">
                 <dt>{t('securityConsole.minimumLength')}</dt>
-                <dd className="m-0 font-semibold text-white">
+                <dd className="m-0 break-words text-right font-semibold text-ink">
                   {t('invitation.passwordCharacters', {
                     count: invitation.passwordMinLength,
                   })}
                 </dd>
                 <dt>{t('securityConsole.passwordExpiry')}</dt>
-                <dd className="m-0 font-semibold text-white">
+                <dd className="m-0 break-words text-right font-semibold text-ink">
                   {invitation.passwordExpiryDays === undefined
                     ? '—'
                     : t('invitation.passwordDays', {
@@ -548,7 +485,7 @@ export function InvitationAcceptancePage() {
                       })}
                 </dd>
                 <dt>{t('securityConsole.passwordHistory')}</dt>
-                <dd className="m-0 font-semibold text-white">
+                <dd className="m-0 break-words text-right font-semibold text-ink">
                   {invitation.passwordHistoryCount === undefined
                     ? '—'
                     : t('invitation.passwordHistoryCount', {
@@ -556,17 +493,17 @@ export function InvitationAcceptancePage() {
                       })}
                 </dd>
                 <dt>{t('securityConsole.mfa')}</dt>
-                <dd className="m-0 font-semibold text-white">
+                <dd className="m-0 break-words text-right font-semibold text-ink">
                   {invitation.mfaRequired ? t('invitation.required') : t('invitation.optional')}
                 </dd>
                 <dt>{t('securityConsole.authenticationMode')}</dt>
-                <dd className="m-0 font-semibold text-white">
+                <dd className="m-0 break-words text-right font-semibold text-ink">
                   {invitation.authMode === undefined
                     ? '—'
                     : t(`securityConsole.authMode.${invitation.authMode}`)}
                 </dd>
                 <dt>{t('securityConsole.allowedMethods')}</dt>
-                <dd className="m-0 text-right font-semibold text-white">
+                <dd className="m-0 text-right font-semibold text-ink">
                   {invitation.mfaAllowedMethods?.length
                     ? invitation.mfaAllowedMethods
                         .map((method) =>

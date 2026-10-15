@@ -3,6 +3,19 @@ import { styleguideEn } from './styleguide'
 export const en = {
   styleguide: styleguideEn,
   app: {
+    skipContent: 'Skip to content',
+    openNavigation: 'Open navigation',
+    closeNavigation: 'Close navigation',
+    expandNavigation: 'Expand navigation',
+    collapseNavigation: 'Collapse navigation',
+    userMenu: 'User menu',
+    securityAccess: 'Security and access',
+    theme: 'Theme',
+    light: 'Light',
+    dark: 'Dark',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+
     name: 'SGEn',
     title: 'Energy management',
     documentTitle: '{{title}} | {{module}}',

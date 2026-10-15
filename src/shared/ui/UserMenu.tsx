@@ -6,9 +6,10 @@ interface UserMenuProps {
   labels: { menu: string; session: string; organization: string; role: string; settings: string; signOut: string }
   onSettings: () => void
   onSignOut: () => void
+  signingOut?: boolean
 }
 
-export function UserMenu({ user, labels, onSettings, onSignOut }: Readonly<UserMenuProps>) {
+export function UserMenu({ user, labels, onSettings, onSignOut, signingOut = false }: Readonly<UserMenuProps>) {
   const names = user.name.trim().split(/\s+/u)
   const initials = [names[0]?.[0], names.length > 1 ? names.at(-1)?.[0] : names[0]?.[1]].join('').toLocaleUpperCase()
   return (
@@ -33,7 +34,7 @@ export function UserMenu({ user, labels, onSettings, onSignOut }: Readonly<UserM
       <DropdownMenuSeparator />
       <DropdownMenuItem icon={<Settings size={18} />} onClick={onSettings}>{labels.settings}</DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem destructive icon={<LogOut size={18} />} onClick={onSignOut}>{labels.signOut}</DropdownMenuItem>
+      <DropdownMenuItem destructive disabled={signingOut} icon={<LogOut size={18} />} onClick={onSignOut}>{labels.signOut}</DropdownMenuItem>
     </DropdownMenu>
   )
 }

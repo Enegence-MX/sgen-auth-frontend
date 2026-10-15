@@ -6,6 +6,8 @@ import { Button } from '../../shared/ui/Button'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { Notice } from '../../shared/ui/Notice'
 import { LanguageSelector } from '../../shared/ui/LanguageSelector'
+import { Card } from '../../shared/ui/Card'
+import { PageHeader } from '../../shared/ui/PageHeader'
 import { ThemeSelector } from '../../shared/ui/ThemeSelector'
 import styles from './Workspace.module.css'
 
@@ -33,23 +35,12 @@ export function SessionPage() {
   const { session } = state
   const platform = session.context.accessMode === 'PLATFORM_SUPERADMIN'
   return (
-    <section>
-      <div className={styles.heading}>
-        <div>
-          <h1>{t('session.title')}</h1>
-          <p>{t('session.description')}</p>
-        </div>
-        <Button
-          disabled={busy}
-          onClick={() => {
-            void renew()
-          }}
-        >
-          {busy ? t('session.renewing') : t('session.renew')}
-        </Button>
-      </div>
+    <section className="grid min-w-0 gap-6">
+      <PageHeader title={t('session.title')} description={t('session.description')} actions={
+        <Button variant="secondary" loading={busy} onClick={() => { void renew() }}>{busy ? t('session.renewing') : t('session.renew')}</Button>
+      } />
       {error !== undefined && <ErrorNotice error={error} />}
-      {renewed && <Notice role="status">{t('session.renewed')}</Notice>}
+      {renewed && <Notice variant="success" role="status">{t('session.renewed')}</Notice>}
       <dl className={styles.details}>
         <div>
           <dt>{t('session.name')}</dt>
@@ -64,13 +55,13 @@ export function SessionPage() {
           <dd>{t(platform ? 'auth.platform' : 'auth.tenant')}</dd>
         </div>
         <div>
-          <dt>{t('app.language')}</dt>
+          <dt className="sr-only">{t('app.language')}</dt>
           <dd>
             <LanguageSelector />
           </dd>
         </div>
         <div>
-          <dt>Tema</dt>
+          <dt className="sr-only">{t('app.theme')}</dt>
           <dd>
             <ThemeSelector />
           </dd>
@@ -84,13 +75,15 @@ export function SessionPage() {
           </div>
         )}
       </dl>
-      <h2>{t('session.permissions')}</h2>
-      <p>{t('session.readOnly')}</p>
-      {platform ? (
-        <Notice>{t('session.platformPermissions')}</Notice>
-      ) : (
-        <PermissionList permissions={session.permissions} />
-      )}
+      <Card>
+        <h2 className="m-0 font-heading text-lg font-semibold text-ink">{t('session.permissions')}</h2>
+        <p className="mt-2 mb-5 text-sm">{t('session.readOnly')}</p>
+        {platform ? (
+          <Notice>{t('session.platformPermissions')}</Notice>
+        ) : (
+          <PermissionList permissions={session.permissions} />
+        )}
+      </Card>
     </section>
   )
 }

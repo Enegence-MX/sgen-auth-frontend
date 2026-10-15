@@ -1,13 +1,16 @@
+import { SelectField } from './SelectField'
+import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../../app/services/services-context'
 
 export function ThemeSelector() {
+  const { t } = useTranslation()
   const { auth } = useServices()
   const state = useSession()
 
   const currentTheme = state.status === 'authenticated' ? state.session.identity.theme || 'light' : 'light'
 
   return (
-    <select
+    <SelectField label={t('app.theme')} className="mb-0!"
       value={currentTheme}
       onChange={(event) => {
         const theme = event.target.value
@@ -20,18 +23,10 @@ export function ThemeSelector() {
           void auth.updateSettings({ theme })
         }
       }}
-      style={{
-        padding: '0.5rem',
-        borderRadius: '6px',
-        border: '1px solid var(--color-border)',
-        background: 'transparent',
-        color: 'inherit',
-        fontFamily: 'inherit',
-        cursor: 'pointer'
-      }}
+
     >
-      <option value="light">Claro</option>
-      <option value="dark">Oscuro</option>
-    </select>
+      <option value="light">{t('app.light')}</option>
+      <option value="dark">{t('app.dark')}</option>
+    </SelectField>
   )
 }

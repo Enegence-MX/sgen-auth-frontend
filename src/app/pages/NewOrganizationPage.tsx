@@ -7,7 +7,10 @@ import { TextArea } from '../../shared/ui/TextArea'
 import { Button } from '../../shared/ui/Button'
 import { Notice } from '../../shared/ui/Notice'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
-import styles from './Workspace.module.css'
+import { ArrowLeft } from 'lucide-react'
+import { Card } from '../../shared/ui/Card'
+import { PageHeader } from '../../shared/ui/PageHeader'
+import { LinkButton } from '../../shared/ui/LinkButton'
 
 export function NewOrganizationPage() {
   const { t } = useTranslation()
@@ -46,52 +49,53 @@ export function NewOrganizationPage() {
   if (state.status !== 'authenticated') return null
   if (state.session.context.accessMode !== 'PLATFORM_SUPERADMIN') return <Navigate to="/organizations" replace />
   return (
-    <section className={styles.formPanel}>
-      <Link to="/organizations">{t('app.back')}</Link>
-      <h1>{t('organizations.new')}</h1>
-      <p>{t('organizations.createHint')}</p>
-      <form onSubmit={submit} aria-label={t('organizations.new')} aria-busy={busy}>
-        <fieldset disabled={busy}>
-          <TextField
-            label={t('organizations.legalName')}
-            value={fields.razonSocial}
-            onChange={(event) => change('razonSocial', event.target.value)}
-            required
-            maxLength={255}
-            autoComplete="organization"
-          />
-          <TextField
-            label={t('organizations.taxId')}
-            value={fields.rfcMaestro}
-            onChange={(event) => change('rfcMaestro', event.target.value.toUpperCase())}
-            required
-            minLength={12}
-            maxLength={13}
-            pattern="[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}"
-          />
-          <TextField
-            label={`${t('organizations.sector')} (${t('organizations.optional')})`}
-            value={fields.sectorIndustrial}
-            onChange={(event) => change('sectorIndustrial', event.target.value)}
-            maxLength={150}
-          />
-          <TextArea
-            label={`${t('organizations.address')} (${t('organizations.optional')})`}
-            id="fiscal-address"
-            value={fields.domicilioFiscal}
-            onChange={(event) => change('domicilioFiscal', event.target.value)}
-            maxLength={4000}
-            rows={3}
-            autoComplete="street-address"
-          />
-          <Notice>{t('organizations.createLimit')}</Notice>
-          <div className={styles.formActions}>
-            <Button type="submit">{busy ? t('organizations.saving') : t('organizations.save')}</Button>
-            <Link to="/organizations">{t('app.cancel')}</Link>
-          </div>
-        </fieldset>
-      </form>
-      {error !== undefined && <ErrorNotice error={error} />}
+    <section className="grid max-w-3xl gap-6">
+      <Link to="/organizations" className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold no-underline hover:underline"><ArrowLeft size={16} aria-hidden="true" />{t('app.back')}</Link>
+      <PageHeader title={t('organizations.new')} description={t('organizations.createHint')} />
+      <Card>
+        <form onSubmit={submit} aria-label={t('organizations.new')} aria-busy={busy}>
+          <fieldset disabled={busy}>
+            <TextField
+              label={t('organizations.legalName')}
+              value={fields.razonSocial}
+              onChange={(event) => change('razonSocial', event.target.value)}
+              required
+              maxLength={255}
+              autoComplete="organization"
+            />
+            <TextField
+              label={t('organizations.taxId')}
+              value={fields.rfcMaestro}
+              onChange={(event) => change('rfcMaestro', event.target.value.toUpperCase())}
+              required
+              minLength={12}
+              maxLength={13}
+              pattern="[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}"
+            />
+            <TextField
+              label={`${t('organizations.sector')} (${t('organizations.optional')})`}
+              value={fields.sectorIndustrial}
+              onChange={(event) => change('sectorIndustrial', event.target.value)}
+              maxLength={150}
+            />
+            <TextArea
+              label={`${t('organizations.address')} (${t('organizations.optional')})`}
+              id="fiscal-address"
+              value={fields.domicilioFiscal}
+              onChange={(event) => change('domicilioFiscal', event.target.value)}
+              maxLength={4000}
+              rows={3}
+              autoComplete="street-address"
+            />
+            <Notice>{t('organizations.createLimit')}</Notice>
+            <div className="mt-6 flex flex-wrap items-center gap-3 border-0 border-t border-solid border-line pt-6">
+              <Button type="submit" loading={busy}>{busy ? t('organizations.saving') : t('organizations.save')}</Button>
+              <LinkButton variant="ghost" to="/organizations">{t('app.cancel')}</LinkButton>
+            </div>
+          </fieldset>
+        </form>
+        {error !== undefined && <ErrorNotice error={error} />}
+      </Card>
     </section>
   )
 }

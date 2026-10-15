@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router'
 import { tenantChoices, type TenantChoice } from '../../features/auth/model/session'
 import type { MfaChallenge } from '../../features/auth/model/mfa-challenge'
+import { Spinner } from '../../shared/ui/Loading'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { useServices, useSession } from '../services/services-context'
 import { AuthStepContent } from './AuthStepContent'
@@ -92,15 +93,15 @@ export function AuthPage() {
   if (state.status === 'loading')
     return (
       <main className={styles.panel}>
-        <p role="status">{t('app.loading')}</p>
+        <Spinner label={t('app.loading')} />
       </main>
     )
 
   return (
     <main className={styles.panel}>
       <img src="/assets/logo-completo.png" alt="Enegence" className={styles.logo} onError={(e) => e.currentTarget.style.display = 'none'} />
-      <form onSubmit={step === 'email' && choices.length === 0 ? (e) => { e.preventDefault(); handleContinueEmail(); } : submit} aria-busy={busy}>
-        <fieldset disabled={busy} style={{ border: 'none', padding: 0, margin: 0 }}>
+      <form aria-label={t('auth.loginForm')} onSubmit={step === 'email' && choices.length === 0 ? (e) => { e.preventDefault(); handleContinueEmail(); } : submit} aria-busy={busy}>
+        <fieldset disabled={busy}>
           <AuthStepContent
             t={t}
             choices={choices}

@@ -16,6 +16,9 @@ import { useServices, useSession } from '../services/services-context'
 import { useResource } from '../hooks/use-resource'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
+import { PageHeader } from '../../shared/ui/PageHeader'
+import { Spinner } from '../../shared/ui/Loading'
+import { Checkbox, Radio } from '../../shared/ui/Checkbox'
 import { Card } from '../../shared/ui/Card'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { Modal } from '../../shared/ui/Modal'
@@ -26,6 +29,8 @@ import { Table } from '../../shared/ui/Table'
 import { Tabs } from '../../shared/ui/Tabs'
 import { TextField } from '../../shared/ui/TextField'
 import type { SecurityPolicy, SecurityPolicyChanges } from '../../features/organizations/model/organization'
+
+const policyFieldClassName = 'grid grid-cols-1 items-center gap-x-4 gap-y-2 [&>label]:mb-0 [&_input]:mb-0 [&_select]:mb-0 [&>p]:mb-0 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,0.65fr)] sm:[&>label]:col-start-1 sm:[&>label]:row-start-1 sm:[&>input]:col-start-2 sm:[&>input]:row-start-1 sm:[&>div]:col-start-2 sm:[&>div]:row-start-1 sm:[&>p]:col-span-2 sm:[&>p]:row-start-2'
 
 type InvitationRole = 'SYSTEM_ADMIN' | 'EXECUTIVE' | 'ENERGY_MANAGER' | 'PLANT_OPERATOR' | 'INTERNAL_AUDITOR'
 
@@ -200,7 +205,7 @@ export function SecurityConsolePage() {
     if (!organizationId) {
       return <Notice variant="warning">{t('securityConsole.tenantRequired')}</Notice>
     }
-    if (policyResource.loading) return <p role="status">{t('app.loading')}</p>
+    if (policyResource.loading) return <Spinner label={t('app.loading')} />
     if (policyResource.error !== undefined) {
       return (
         <>
@@ -212,13 +217,13 @@ export function SecurityConsolePage() {
     if (!policyValues) return <Notice variant="warning">{t('securityConsole.tenantRequired')}</Notice>
 
     return (
-      <form onSubmit={savePolicies} className="grid gap-5">
+      <form onSubmit={savePolicies} className="grid min-w-0 grid-cols-1 gap-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="m-0 font-heading text-xl font-semibold text-ink">{t('securityConsole.policies')}</h2>
             <p className="mt-2 mb-0 text-sm text-body">{t('securityConsole.policyDescription')}</p>
           </div>
-          <Button type="submit" disabled={savingPolicy || isPlatform}>
+          <Button type="submit" loading={savingPolicy} disabled={isPlatform}>
             <Check size={17} aria-hidden="true" />
             {savingPolicy ? t('app.loading') : t('securityConsole.save')}
           </Button>
@@ -253,8 +258,8 @@ export function SecurityConsolePage() {
               <KeyRound size={19} className="text-brand" aria-hidden="true" />
               <h3 className="m-0 font-heading text-base font-semibold text-ink">{t('securityConsole.localPasswords')}</h3>
             </div>
-            <div className="grid gap-4">
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.75fr)] items-center gap-x-4 gap-y-1 [&>label]:col-start-1 [&>label]:row-start-1 [&>input]:col-start-2 [&>input]:row-start-1 [&>p]:col-span-2 [&>p]:row-start-2">
+            <div className="grid min-w-0 grid-cols-1 gap-4">
+              <div className={policyFieldClassName}>
                 <TextField
                   type="number"
                   min={8}
@@ -266,7 +271,7 @@ export function SecurityConsolePage() {
                   onChange={(event) => updateNumber((value) => updatePolicy('passwordMinLength', value), event.target.value, 8, 128)}
                 />
               </div>
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.75fr)] items-center gap-x-4 gap-y-1 [&>label]:col-start-1 [&>div]:col-start-2 [&>div]:row-start-1">
+              <div className={policyFieldClassName}>
                 <SelectField
                   label={t('securityConsole.passwordExpiry')}
                   value={policyValues.passwordExpiryDays}
@@ -276,7 +281,7 @@ export function SecurityConsolePage() {
                   {[30, 60, 90, 180, 365, 730].map((days) => <option key={days} value={days}>{days} {t('securityConsole.days')}</option>)}
                 </SelectField>
               </div>
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.75fr)] items-center gap-x-4 gap-y-1 border-0 border-t border-solid border-line pt-4 [&>label]:col-start-1 [&>label]:row-start-1 [&>input]:col-start-2 [&>input]:row-start-1">
+              <div className={policyFieldClassName}>
                 <TextField
                   type="number"
                   min={0}
@@ -339,13 +344,7 @@ export function SecurityConsolePage() {
               <fieldset className="m-0 grid gap-2 border-0 p-0">
                 <legend className="mb-2 text-sm font-semibold text-ink">{t('securityConsole.federatedMfa')}</legend>
                 {(['TRUST_IDP', 'REQUIRE_IDP_EVIDENCE', 'REQUIRE_SGEN_MFA'] as const).map((mode) => (
-                  <label key={mode} className={`flex cursor-pointer items-start gap-3 rounded-control border border-solid p-3 ${federatedMfaModePreview === mode ? 'border-brand bg-brand-soft' : 'border-line bg-panel'}`}>
-                    <input type="radio" name="federated-mfa-mode" checked={federatedMfaModePreview === mode} onChange={() => setFederatedMfaModePreview(mode)} className="mt-1 accent-brand" />
-                    <span>
-                      <span className="block text-sm font-semibold text-ink">{t(`securityConsole.federatedMfaMode.${mode}.title`)}</span>
-                      <span className="text-xs text-body">{t(`securityConsole.federatedMfaMode.${mode}.description`)}</span>
-                    </span>
-                  </label>
+                  <Radio key={mode} name="federated-mfa-mode" checked={federatedMfaModePreview === mode} onChange={() => setFederatedMfaModePreview(mode)} label={t(`securityConsole.federatedMfaMode.${mode}.title`)} description={t(`securityConsole.federatedMfaMode.${mode}.description`)} containerClassName="rounded-control border border-solid border-line bg-panel p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft" />
                 ))}
               </fieldset>
             </div>
@@ -355,11 +354,11 @@ export function SecurityConsolePage() {
         <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
           <Card>
             <h3 className="m-0 mb-4 font-heading text-base font-semibold text-ink">{t('securityConsole.sessionControls')}</h3>
-            <div className="grid gap-4">
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.55fr)] items-center gap-x-4 [&>label]:col-start-1 [&>input]:col-start-2 [&>input]:row-start-1"><TextField type="number" min={1} max={720} label={`${t('securityConsole.maximumSession')} (${t('securityConsole.hours')})`} value={policyValues.sessionMaxHours} disabled={isPlatform} onChange={(event) => updateNumber((value) => { updatePolicy('sessionMaxHours', value); if (policyValues.idleTimeoutMinutes > value * 60) updatePolicy('idleTimeoutMinutes', Math.min(480, value * 60)) }, event.target.value, 1, 720)} /></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.55fr)] items-center gap-x-4 [&>label]:col-start-1 [&>input]:col-start-2 [&>input]:row-start-1"><TextField type="number" min={5} max={Math.min(480, policyValues.sessionMaxHours * 60)} label={`${t('securityConsole.idleTimeout')} (${t('securityConsole.minutes')})`} value={policyValues.idleTimeoutMinutes} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('idleTimeoutMinutes', value), event.target.value, 5, Math.min(480, policyValues.sessionMaxHours * 60))} /></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.55fr)] items-center gap-x-4 [&>label]:col-start-1 [&>input]:col-start-2 [&>input]:row-start-1"><TextField type="number" min={1} max={20} label={t('securityConsole.concurrentSessions')} value={policyValues.maxConcurrentSessions} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('maxConcurrentSessions', value), event.target.value, 1, 20)} /></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.55fr)] items-center gap-x-4 [&>label]:col-start-1 [&>input]:col-start-2 [&>input]:row-start-1"><TextField type="number" min={1} max={720} label={`${t('securityConsole.invitationExpiry')} (${t('securityConsole.hours')})`} value={policyValues.invitationExpiryHours} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('invitationExpiryHours', value), event.target.value, 1, 720)} /></div>
+            <div className="grid min-w-0 grid-cols-1 gap-4">
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={720} label={`${t('securityConsole.maximumSession')} (${t('securityConsole.hours')})`} value={policyValues.sessionMaxHours} disabled={isPlatform} onChange={(event) => updateNumber((value) => { updatePolicy('sessionMaxHours', value); if (policyValues.idleTimeoutMinutes > value * 60) updatePolicy('idleTimeoutMinutes', Math.min(480, value * 60)) }, event.target.value, 1, 720)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={5} max={Math.min(480, policyValues.sessionMaxHours * 60)} label={`${t('securityConsole.idleTimeout')} (${t('securityConsole.minutes')})`} value={policyValues.idleTimeoutMinutes} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('idleTimeoutMinutes', value), event.target.value, 5, Math.min(480, policyValues.sessionMaxHours * 60))} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={20} label={t('securityConsole.concurrentSessions')} value={policyValues.maxConcurrentSessions} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('maxConcurrentSessions', value), event.target.value, 1, 20)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={720} label={`${t('securityConsole.invitationExpiry')} (${t('securityConsole.hours')})`} value={policyValues.invitationExpiryHours} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('invitationExpiryHours', value), event.target.value, 1, 720)} /></div>
             </div>
           </Card>
           <Card>
@@ -368,10 +367,10 @@ export function SecurityConsolePage() {
               <p className="m-0 font-semibold text-ink">{t('securityConsole.lockoutEnabled')}</p>
               <Switch label={t('securityConsole.lockoutEnabled')} hideLabel checked={policyValues.lockoutEnabled} disabled={isPlatform} onChange={(event) => updatePolicy('lockoutEnabled', event.target.checked)} />
             </div>
-            <div className="grid gap-4">
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.55fr)] items-center gap-x-4 [&>label]:col-start-1 [&>input]:col-start-2 [&>input]:row-start-1"><TextField type="number" min={3} max={20} label={t('securityConsole.maxAttempts')} value={policyValues.maxLoginAttempts} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('maxLoginAttempts', value), event.target.value, 3, 20)} /></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.55fr)] items-center gap-x-4 [&>label]:col-start-1 [&>input]:col-start-2 [&>input]:row-start-1"><TextField type="number" min={1} max={1440} label={`${t('securityConsole.attemptWindow')} (${t('securityConsole.minutes')})`} value={policyValues.attemptWindowSeconds / 60} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('attemptWindowSeconds', value * 60), event.target.value, 1, 1440)} /></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(7rem,0.55fr)] items-center gap-x-4 [&>label]:col-start-1 [&>input]:col-start-2 [&>input]:row-start-1"><TextField type="number" min={1} max={1440} label={`${t('securityConsole.lockoutDuration')} (${t('securityConsole.minutes')})`} value={policyValues.lockoutDurationMinutes} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('lockoutDurationMinutes', value), event.target.value, 1, 1440)} /></div>
+            <div className="grid min-w-0 grid-cols-1 gap-4">
+              <div className={policyFieldClassName}><TextField type="number" min={3} max={20} label={t('securityConsole.maxAttempts')} value={policyValues.maxLoginAttempts} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('maxLoginAttempts', value), event.target.value, 3, 20)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={1440} label={`${t('securityConsole.attemptWindow')} (${t('securityConsole.minutes')})`} value={policyValues.attemptWindowSeconds / 60} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('attemptWindowSeconds', value * 60), event.target.value, 1, 1440)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={1440} label={`${t('securityConsole.lockoutDuration')} (${t('securityConsole.minutes')})`} value={policyValues.lockoutDurationMinutes} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('lockoutDurationMinutes', value), event.target.value, 1, 1440)} /></div>
             </div>
           </Card>
         </div>
@@ -382,25 +381,23 @@ export function SecurityConsolePage() {
 
   function ProviderPanel() {
     return (
-      <div className="grid gap-5">
+      <div className="grid min-w-0 grid-cols-1 gap-5">
         <div>
           <h2 className="m-0 font-heading text-xl font-semibold text-ink">{t('securityConsole.providers')}</h2>
           <p className="mt-2 mb-0 text-sm text-body">{t('securityConsole.providerDescription')}</p>
         </div>
-        <Card>
-          <Table caption={t('securityConsole.providers')}>
-            <thead>
-              <tr>
-                <th scope="col">{t('securityConsole.providerName')}</th>
-                <th scope="col">{t('securityConsole.protocol')}</th>
-                <th scope="col">{t('securityConsole.issuer')}</th>
-                <th scope="col">{t('securityConsole.ssoUrl')}</th>
-                <th scope="col">{t('securityConsole.status')}</th>
-              </tr>
-            </thead>
-            <tbody />
-          </Table>
-        </Card>
+        <Table caption={t('securityConsole.providers')}>
+          <thead>
+            <tr>
+              <th scope="col">{t('securityConsole.providerName')}</th>
+              <th scope="col">{t('securityConsole.protocol')}</th>
+              <th scope="col">{t('securityConsole.issuer')}</th>
+              <th scope="col">{t('securityConsole.ssoUrl')}</th>
+              <th scope="col">{t('securityConsole.status')}</th>
+            </tr>
+          </thead>
+          <tbody />
+        </Table>
         <Card>
           <h3 className="m-0 mb-4 font-heading text-base font-semibold text-ink">{t('securityConsole.domains')}</h3>
           <Table caption={t('securityConsole.domains')} className="min-w-[600px]">
@@ -414,23 +411,21 @@ export function SecurityConsolePage() {
 
   function UsersPanel() {
     return (
-      <div className="grid gap-5">
+      <div className="grid min-w-0 grid-cols-1 gap-5">
         <div>
           <h2 className="m-0 font-heading text-xl font-semibold text-ink">{t('securityConsole.usersAndRoles')}</h2>
           <p className="mt-2 mb-0 text-sm text-body">{t('securityConsole.userDescription')}</p>
         </div>
-        <Card>
-          <Table caption={t('securityConsole.usersAndRoles')}>
-            <thead>
-              <tr>
-                <th scope="col">{t('securityConsole.account')}</th>
-                <th scope="col">{t('securityConsole.signInMethod')}</th>
-                <th scope="col">{t('securityConsole.assignedRoles')}</th>
-              </tr>
-            </thead>
-            <tbody />
-          </Table>
-        </Card>
+        <Table caption={t('securityConsole.usersAndRoles')}>
+          <thead>
+            <tr>
+              <th scope="col">{t('securityConsole.account')}</th>
+              <th scope="col">{t('securityConsole.signInMethod')}</th>
+              <th scope="col">{t('securityConsole.assignedRoles')}</th>
+            </tr>
+          </thead>
+          <tbody />
+        </Table>
         {InvitationPanel()}
       </div>
     )
@@ -455,8 +450,8 @@ export function SecurityConsolePage() {
             <p className="mt-1 mb-0 text-sm leading-relaxed text-body">{t('securityConsole.inviteDescription')}</p>
           </div>
         </div>
-        <form className="grid gap-5" onSubmit={sendInvitation}>
-          <TextField
+        <form className="grid min-w-0 grid-cols-1 gap-5" onSubmit={sendInvitation}>
+          <div><TextField
             label={t('securityConsole.inviteEmail')}
             type="email"
             autoComplete="email"
@@ -464,22 +459,11 @@ export function SecurityConsolePage() {
             value={inviteEmail}
             onChange={(event) => { setInviteEmail(event.target.value); setInviteError(undefined) }}
             required
-          />
+          /></div>
           <fieldset className="m-0 grid gap-2 border-0 p-0">
             <legend className="mb-2 text-sm font-semibold text-ink">{t('securityConsole.inviteRoles')}</legend>
             {invitationRoles.map((role) => (
-              <label key={role} className="flex cursor-pointer items-start gap-3 rounded-control p-2 hover:bg-subtle">
-                <input
-                  type="checkbox"
-                  checked={inviteRoles.includes(role)}
-                  onChange={() => toggleInvitationRole(role)}
-                  className="mt-1 size-4 accent-brand"
-                />
-                <span>
-                  <span className="block text-sm font-semibold text-ink">{roleLabels[role]}</span>
-                  <span className="text-xs text-body">{role}</span>
-                </span>
-              </label>
+              <Checkbox key={role} checked={inviteRoles.includes(role)} onChange={() => toggleInvitationRole(role)} label={roleLabels[role]} description={role} containerClassName="rounded-control p-2 hover:bg-subtle" />
             ))}
           </fieldset>
           {inviteError !== undefined && <ErrorNotice error={inviteError} />}
@@ -504,24 +488,22 @@ export function SecurityConsolePage() {
 
   function GroupsPanel() {
     return (
-      <div className="grid gap-5">
+      <div className="grid min-w-0 grid-cols-1 gap-5">
         <div>
           <h2 className="m-0 font-heading text-xl font-semibold text-ink">{t('securityConsole.groups')}</h2>
           <p className="mt-2 mb-0 text-sm text-body">{t('securityConsole.groupDescription')}</p>
         </div>
-        <Card>
-          <Table caption={t('securityConsole.groups')}>
-            <thead><tr><th scope="col">{t('securityConsole.objectId')}</th><th scope="col">{t('securityConsole.displayName')}</th><th scope="col">{t('securityConsole.role')}</th></tr></thead>
-            <tbody />
-          </Table>
-        </Card>
+        <Table caption={t('securityConsole.groups')}>
+          <thead><tr><th scope="col">{t('securityConsole.objectId')}</th><th scope="col">{t('securityConsole.displayName')}</th><th scope="col">{t('securityConsole.role')}</th></tr></thead>
+          <tbody />
+        </Table>
       </div>
     )
   }
 
   function AuditPanel() {
     return (
-      <div className="grid gap-5">
+      <div className="grid min-w-0 grid-cols-1 gap-5">
         <div>
           <h2 className="m-0 font-heading text-xl font-semibold text-ink">{t('securityConsole.audit')}</h2>
           <p className="mt-2 mb-0 text-sm text-body">{t('securityConsole.auditDescription')}</p>
@@ -535,38 +517,24 @@ export function SecurityConsolePage() {
   }
 
   return (
-    <section className="grid gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="mb-2 text-xs font-bold tracking-widest text-brand uppercase">{t('securityConsole.organization')}</p>
-          <h1 className="m-0 font-heading text-2xl font-semibold text-ink sm:text-3xl">{t('securityConsole.title')}</h1>
-          <p className="mt-2 mb-0 text-sm text-body">{t('securityConsole.description')}</p>
+    <section className="grid min-w-0 grid-cols-1 gap-6">
+      <PageHeader title={t('securityConsole.title')} description={t('securityConsole.description')} eyebrow={t('securityConsole.organization')} actions={<>
+        <Button variant="secondary" size="sm" onClick={() => setSupportOpen(true)}>{t('securityConsole.supportContext')}</Button>
+        {isPlatform && (
+        <div className="w-72 max-w-full [&_select]:mb-0">
+          <SelectField label={t('securityConsole.organization')} value={selectedOrganizationId} disabled={organizationOptions.loading} onChange={(event) => {
+            setSelectedOrganizationId(event.target.value)
+            setPolicyDraft(undefined)
+            setSavedPolicy(undefined)
+            setSaved(false)
+            setPolicySaveError(undefined)
+          }}>
+            <option value="">{t('securityConsole.selectOrganization')}</option>
+            {(organizationOptions.value ?? []).map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
+          </SelectField>
         </div>
-        <div className="flex flex-wrap items-end gap-3">
-          {isPlatform && (
-            <div className="min-w-64 flex-1 sm:max-w-sm">
-              <SelectField
-                label={t('securityConsole.organization')}
-                value={selectedOrganizationId}
-                disabled={organizationOptions.loading}
-                onChange={(event) => {
-                  setSelectedOrganizationId(event.target.value)
-                  setPolicyDraft(undefined)
-                  setSavedPolicy(undefined)
-                  setSaved(false)
-                  setPolicySaveError(undefined)
-                }}
-              >
-                <option value="">{t('securityConsole.selectOrganization')}</option>
-                {(organizationOptions.value ?? []).map((organization) => (
-                  <option key={organization.id} value={organization.id}>{organization.name}</option>
-                ))}
-              </SelectField>
-            </div>
-          )}
-        </div>
-      </div>
-      {isPlatform && organizationOptions.loading && <p role="status">{t('app.loading')}</p>}
+      )}</>} />
+      {isPlatform && organizationOptions.loading && <Spinner label={t('app.loading')} />}
       {isPlatform && organizationOptions.error !== undefined && (
         <>
           <ErrorNotice error={organizationOptions.error} />

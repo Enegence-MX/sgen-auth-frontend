@@ -205,6 +205,10 @@ export function fixture(
     if (url.pathname.endsWith('/auth/refresh'))
       return session ? json({ data: { csrfToken: 'rotated-csrf' } }) : denied()
     if (!session) return denied()
+    if (url.pathname.endsWith('/auth/me/settings')) {
+      session = { ...session, identity: { ...session.identity, ...body } }
+      return json({ data: { success: true } })
+    }
     if (url.pathname.endsWith('/auth/me')) return json({ data: session })
     if (url.pathname.endsWith('/auth/logout')) {
       session = undefined

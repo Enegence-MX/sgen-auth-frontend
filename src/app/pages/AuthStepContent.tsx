@@ -2,6 +2,10 @@ import type { TFunction } from 'i18next'
 import type { Credentials } from '../../features/auth/model/credentials'
 import type { MfaChallenge } from '../../features/auth/model/mfa-challenge'
 import type { TenantChoice } from '../../features/auth/model/session'
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { Button } from '../../shared/ui/Button'
+import { TextField } from '../../shared/ui/TextField'
+import { SelectField } from '../../shared/ui/SelectField'
 import styles from './AuthPage.module.css'
 
 interface AuthStepContentProps {
@@ -46,27 +50,18 @@ export function AuthStepContent({
   if (choices.length) {
     return (
       <div className={styles.stepContainer}>
-        <button type="button" onClick={onCancel} className={styles.backButton}>&larr; {credentials.email}</button>
-        <h1 className={styles.title} style={{ textAlign: 'left', margin: 0 }}>{t('auth.tenantHeading')}</h1>
-        <p className={styles.subtitle} style={{ textAlign: 'left' }}>{t('auth.tenantHint')}</p>
-        <div className={styles.inputGroup}>
-          <label htmlFor="tenant-choice" className={styles.label}>{t('auth.tenantLabel')}</label>
-          <select
-            id="tenant-choice"
-            value={tenantId}
-            onChange={(event) => onTenantChange(event.target.value)}
-            required
-            className={styles.input}
-          >
-            <option value="">{t('auth.tenantPlaceholder')}</option>
-            {choices.map((item) => (
-              <option key={item.tenantId} value={item.tenantId}>{item.legalName}</option>
-            ))}
-          </select>
+        <Button variant="ghost" onClick={onCancel} className="self-start break-all text-left"><ArrowLeft size={16} aria-hidden="true" />{credentials.email}</Button>
+        <div className={styles.headerBox}>
+          <h1 className={styles.title}>{t('auth.tenantHeading')}</h1>
+          <p className={styles.subtitle}>{t('auth.tenantHint')}</p>
         </div>
-        <button type="submit" className={styles.buttonPrimary} disabled={busy || !tenantId}>
-          {busy ? t('auth.processing') : actionLabel}
-        </button>
+        <div>
+          <SelectField id="tenant-choice" label={t('auth.tenantLabel')} value={tenantId} onChange={(event) => onTenantChange(event.target.value)} required>
+            <option value="">{t('auth.tenantPlaceholder')}</option>
+            {choices.map((item) => <option key={item.tenantId} value={item.tenantId}>{item.legalName}</option>)}
+          </SelectField>
+        </div>
+        <Button type="submit" loading={busy} disabled={!tenantId}>{busy ? t('auth.processing') : actionLabel}</Button>
       </div>
     )
   }
@@ -78,22 +73,10 @@ export function AuthStepContent({
           <h1 className={styles.title}>{t('auth.loginStep1Title')}</h1>
           <p className={styles.subtitle}>{t('auth.loginStep1Subtitle')}</p>
         </div>
-        <div className={styles.inputGroup}>
-          <label htmlFor="emailInput" className={styles.label}>{t('auth.emailLabel')}</label>
-          <input
-            id="emailInput"
-            type="email"
-            autoComplete="username"
-            placeholder="nombre@empresa.com"
-            className={styles.input}
-            value={credentials.email}
-            onChange={(event) => onEmailChange(event.target.value)}
-            required
-          />
+        <div>
+          <TextField id="emailInput" label={t('auth.emailLabel')} type="email" autoComplete="username" placeholder={t('auth.emailPlaceholder')} value={credentials.email} onChange={(event) => onEmailChange(event.target.value)} required />
         </div>
-        <button type="submit" className={styles.buttonPrimary} disabled={!credentials.email.trim()}>
-          {t('auth.continueEmail')}
-        </button>
+        <Button type="submit" disabled={!credentials.email.trim()}>{t('auth.continueEmail')}</Button>
       </div>
     )
   }
@@ -101,67 +84,30 @@ export function AuthStepContent({
   if (step === 'password') {
     return (
       <div className={styles.stepContainer}>
-        <button type="button" onClick={onBackToEmail} className={styles.backButton}>&larr; {credentials.email}</button>
-        <h1 className={styles.title} style={{ textAlign: 'left', margin: 0 }}>{t('auth.loginStep2Title')}</h1>
-        <div className={styles.inputGroup}>
-          <label htmlFor="pwdInput" className={styles.label}>{t('auth.passwordLabel')}</label>
-          <div style={{ position: 'relative' }}>
-            <input
-              id="pwdInput"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              className={styles.input}
-              style={{ paddingRight: '48px', width: '100%', boxSizing: 'border-box' }}
-              value={credentials.password}
-              onChange={(event) => onPasswordChange(event.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={onTogglePassword}
-              aria-label="Mostrar u ocultar contraseña"
-              className={styles.togglePwdButton}
-              style={{ position: 'absolute', right: '4px', top: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6178" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </button>
-          </div>
+        <Button variant="ghost" onClick={onBackToEmail} className="self-start break-all text-left"><ArrowLeft size={16} aria-hidden="true" />{credentials.email}</Button>
+        <h1 className={styles.title}>{t('auth.loginStep2Title')}</h1>
+        <div className="relative">
+          <TextField id="pwdInput" label={t('auth.passwordLabel')} type={showPassword ? 'text' : 'password'} autoComplete="current-password" className="pr-14" value={credentials.password} onChange={(event) => onPasswordChange(event.target.value)} required />
+          <Button size="icon" variant="ghost" onClick={onTogglePassword} aria-label={t(showPassword ? 'app.hidePassword' : 'app.showPassword')} aria-pressed={showPassword} className="absolute top-8 right-1">
+            {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+          </Button>
         </div>
-        <button type="submit" className={styles.buttonPrimary} disabled={busy || !credentials.password.trim()}>
-          {busy ? t('auth.processing') : t('auth.loginButton')}
-        </button>
+        <Button type="submit" loading={busy} disabled={!credentials.password.trim()}>{busy ? t('auth.processing') : t('auth.loginButton')}</Button>
       </div>
     )
   }
 
   return (
     <div className={styles.stepContainer}>
-      <button type="button" onClick={onCancel} className={styles.backButton}>{t('app.back')}</button>
-      <h1 className={styles.title} style={{ textAlign: 'left', margin: 0 }}>{t('auth.mfaTitle')}</h1>
-      <p className={styles.subtitle} style={{ textAlign: 'left' }}>
-        {t('auth.mfaSubtitle', { email: mfaChallenge?.sentTo ?? credentials.email })}
-      </p>
-      <div className={styles.inputGroup}>
-        <label htmlFor="mfaCode" className={styles.label}>{t('auth.mfaCode')}</label>
-        <input
-          id="mfaCode"
-          type="text"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          pattern="[0-9]{6}"
-          maxLength={6}
-          className={styles.input}
-          value={mfaCode}
-          onChange={(event) => onCodeChange(event.target.value.replace(/\D/g, ''))}
-          required
-        />
+      <Button variant="ghost" onClick={onCancel} className="self-start"><ArrowLeft size={16} aria-hidden="true" />{t('app.back')}</Button>
+      <div className={styles.headerBox}>
+        <h1 className={styles.title}>{t('auth.mfaTitle')}</h1>
+        <p className={styles.subtitle}>{t('auth.mfaSubtitle', { email: mfaChallenge?.sentTo ?? credentials.email })}</p>
       </div>
-      <button type="submit" className={styles.buttonPrimary} disabled={busy || mfaCode.length !== 6}>
-        {busy ? t('auth.processing') : t('auth.verifyCode')}
-      </button>
+      <div>
+        <TextField id="mfaCode" label={t('auth.mfaCode')} type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} className="text-center font-mono text-2xl tracking-[0.3em]" value={mfaCode} onChange={(event) => onCodeChange(event.target.value.replace(/\D/g, ''))} required />
+      </div>
+      <Button type="submit" loading={busy} disabled={mfaCode.length !== 6}>{busy ? t('auth.processing') : t('auth.verifyCode')}</Button>
     </div>
   )
 }

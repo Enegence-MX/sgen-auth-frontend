@@ -6,7 +6,8 @@ import { alpha, beta, fixture, platform, tenantSession } from './fixtures'
 
 async function signIn(user: ReturnType<typeof userEvent.setup>) {
   await user.type(await screen.findByLabelText('Correo electrónico'), 'test@example.test')
-  await user.type(screen.getByLabelText('Contraseña'), crypto.randomUUID())
+  await user.click(screen.getByRole('button', { name: 'Continuar' }))
+  await user.type(await screen.findByLabelText('Contraseña'), crypto.randomUUID())
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
 }
 
@@ -317,7 +318,7 @@ describe('current backend flows', () => {
       }),
     )
   })
-  it('lets platform admins select an organization and opens support from the header', async () => {
+  it('lets platform admins select an organization and opens the support dialog', async () => {
     const user = userEvent.setup()
     render(fixture({ initial: platform }).services, '/security')
     expect(await screen.findByRole('heading', { name: 'Consola de seguridad' })).toBeInTheDocument()
@@ -355,9 +356,11 @@ describe('current backend flows', () => {
     render(fixture({ initial: platform }).services, '/session')
     await user.click(await screen.findByRole('button', { name: 'Renovar sesión' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Sesión renovada correctamente.')
-    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    await user.click(screen.getByRole('button', { name: /Menú de usuario/ }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Cerrar sesión' }))
     await screen.findByRole('form', { name: 'Iniciar sesión' })
-    expect(screen.getByLabelText('Contraseña')).toHaveValue('')
+    expect(screen.getByLabelText('Correo electrónico')).toHaveValue('')
+    expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument()
   })
   it('searches organizations and changes visible language', async () => {
     const user = userEvent.setup()
@@ -367,7 +370,10 @@ describe('current backend flows', () => {
     await user.click(screen.getByRole('button', { name: 'Buscar' }))
     await waitFor(() => expect(screen.queryByText('Development Alpha')).not.toBeInTheDocument())
     await screen.findByText('Development Beta')
-    await user.selectOptions(screen.getByLabelText('Idioma'), 'en')
+    await user.click(screen.getByRole('button', { name: /Menú de usuario/ }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Mi sesión' }))
+    await user.selectOptions(await screen.findByLabelText('Idioma'), 'en')
+    await user.click(await screen.findByRole('link', { name: 'Organizations' }))
     expect(screen.getByRole('heading', { name: 'Organizations' })).toBeInTheDocument()
     expect(document.title).toBe('SGEn | Organizations')
   })

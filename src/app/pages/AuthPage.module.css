@@ -1,143 +1,47 @@
 .panel {
   width: 100%;
-  max-width: 460px;
-  box-sizing: border-box;
-  background: #FFFFFF;
-  border: 1px solid #DDE2EE;
-  border-radius: 16px;
-  padding: 40px;
+  max-width: 480px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 4vw, 40px);
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  box-shadow: 0 12px 32px rgba(22,27,63,0.08);
-}
-
-@media (max-width: 480px) {
-  .panel {
-    padding: 24px;
-  }
+  gap: 24px;
+  box-shadow: var(--elevation-card);
 }
 
 .logo {
-  width: 96px;
+  width: 112px;
   height: auto;
   align-self: center;
-  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  background: #fff;
 }
 
 .stepContainer {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
 .headerBox {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  gap: 12px;
 }
 
 .title {
   margin: 0;
-  font-family: 'Sora', sans-serif;
+  font-family: var(--font-family-heading);
   font-size: 24px;
   font-weight: 600;
-  color: #161B3F;
+  color: var(--color-text-strong);
 }
 
 .subtitle {
   margin: 0;
   font-size: 14px;
-  color: #5A6178;
-  line-height: 1.5;
-}
-
-.inputGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1A1F36;
-}
-
-.input {
-  width: 100%;
-  height: 46px;
-  box-sizing: border-box;
-  border: 1px solid #C4CBDD;
-  border-radius: 10px;
-  padding: 0 14px;
-  font-size: 15px;
-  color: #1A1F36;
-  background: #FFFFFF;
-  transition: outline 0.2s;
-}
-
-.input:focus-visible {
-  outline: 3px solid #8FB6F2;
-  outline-offset: 2px;
-}
-
-.buttonPrimary {
-  width: 100%;
-  height: 46px;
-  border: none;
-  border-radius: 10px;
-  background: #5A6DA9;
-  color: #FFFFFF;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.buttonPrimary:hover:not(:disabled) {
-  background: #47568A;
-}
-
-.buttonPrimary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.buttonPrimary:focus-visible {
-  outline: 3px solid #8FB6F2;
-  outline-offset: 2px;
-}
-
-.backButton {
-  align-self: flex-start;
-  border: none;
-  background: none;
-  padding: 0;
-  color: #5A6DA9;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.backButton:hover {
-  text-decoration: underline;
-}
-
-.togglePwdButton {
-  position: absolute;
-  right: 4px;
-  top: 4px;
-  width: 38px;
-  height: 38px;
-  border: none;
-  background: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.configurationMessage {
-  margin-bottom: var(--space-4);
+  color: var(--color-text);
+  line-height: 1.65;
 }

@@ -1,44 +1,25 @@
-// Este componente sirve como cascarón visual para la futura implementación de MFA.
-// No está conectado al flujo funcional porque aún no hay endpoint de verificación TOTP.
+// Visual placeholder; the active sign-in flow uses AuthStepContent.
+import { useState, type SubmitEvent } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Button } from '../../../shared/ui/Button'
+import { TextField } from '../../../shared/ui/TextField'
+import styles from '../../../app/pages/AuthPage.module.css'
 
-import { useState } from 'react'
-import { Notice } from '../../../shared/ui/Notice'
-import styles from '../../pages/AuthPage.module.css'
-
-export function MfaVerification({ onVerify }: { onVerify?: (code: string) => void }) {
+export function MfaVerification({ onVerify }: Readonly<{ onVerify?: (code: string) => void }>) {
+  const { t } = useTranslation()
   const [code, setCode] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (code.length === 6 && onVerify) {
-      onVerify(code)
-    }
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (code.length === 6) onVerify?.(code)
   }
 
   return (
     <div className={styles.stepContainer}>
-      <h1 className={styles.title} style={{ textAlign: 'left', margin: 0 }}>Verificación en dos pasos</h1>
-      <Notice variant="neutral" style={{ background: '#E6ECFB', color: '#23306E', border: 'none' }}>
-        Se detectó un inicio de sesión desde un dispositivo nuevo. Ingrese el código de su aplicación autenticadora.
-      </Notice>
-      
-      <form onSubmit={handleSubmit} className={styles.inputGroup} style={{ marginTop: '8px' }}>
-        <label htmlFor="mfaCode" className={styles.label}>Código de 6 dígitos</label>
-        <input 
-          id="mfaCode" 
-          type="text" 
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={6}
-          className={styles.input}
-          style={{ height: '52px', fontSize: '24px', letterSpacing: '0.4em', fontFamily: 'ui-monospace, Consolas, monospace', textAlign: 'center' }}
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          required
-        />
-        <button type="submit" className={styles.buttonPrimary} style={{ marginTop: '14px' }} disabled={code.length !== 6}>
-          Verificar
-        </button>
+      <h1 className={styles.title}>{t('invitation.mfaHeading')}</h1>
+      <form onSubmit={handleSubmit}>
+        <TextField label={t('auth.mfaCode')} type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} className="text-center font-mono text-2xl tracking-[0.3em]" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} required />
+        <Button type="submit" disabled={code.length !== 6} className="w-full">{t('auth.verifyCode')}</Button>
       </form>
     </div>
   )

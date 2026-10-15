@@ -1,12 +1,14 @@
 .panel {
-  flex: 0 0 600px;
-  height: 100vh;
+  flex: 0 0 42%;
+  max-width: 640px;
+  min-height: 100dvh;
   box-sizing: border-box;
-  background: #161B3F;
+  background: var(--color-brand-navy);
   color: #FFFFFF;
   position: relative;
   overflow: hidden;
-  padding: 64px 64px 56px;
+  padding: clamp(32px, 4vw, 64px);
+  gap: 48px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -48,7 +50,7 @@
 }
 
 .brandName {
-  font-family: 'Sora', sans-serif;
+  font-family: var(--font-family-heading);
   font-weight: 600;
   font-size: 15px;
   letter-spacing: 0.18em;
@@ -62,7 +64,7 @@
 }
 
 .title {
-  font-family: 'Sora', sans-serif;
+  font-family: var(--font-family-heading);
   font-size: 64px;
   font-weight: 700;
   line-height: 1;
@@ -70,7 +72,7 @@
 }
 
 .subtitle {
-  font-family: 'Sora', sans-serif;
+  font-family: var(--font-family-heading);
   font-size: 26px;
   font-weight: 500;
   line-height: 1.3;
@@ -99,6 +101,6 @@
 
 @media (max-width: 1024px) {
   .panel {
-    display: none; /* Se oculta en dispositivos móviles para priorizar el login */
+    display: none;
   }
 }

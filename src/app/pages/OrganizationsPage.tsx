@@ -8,7 +8,12 @@ import { TextField } from '../../shared/ui/TextField'
 import { Table } from '../../shared/ui/Table'
 import { Badge } from '../../shared/ui/Badge'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
-import styles from './Workspace.module.css'
+import { Plus, Search } from 'lucide-react'
+import { Card } from '../../shared/ui/Card'
+import { PageHeader } from '../../shared/ui/PageHeader'
+import { LinkButton } from '../../shared/ui/LinkButton'
+import { Pagination } from '../../shared/ui/Pagination'
+import { Spinner } from '../../shared/ui/Loading'
 
 export function OrganizationsPage() {
   const state = useSession()
@@ -36,29 +41,19 @@ function PlatformOrganizations() {
     setSearch(query.trim())
   }
   return (
-    <section>
-      <div className={styles.heading}>
-        <div>
-          <h1>{t('organizations.title')}</h1>
-          <p>{t('organizations.description')}</p>
-        </div>
-        <Link className={styles.primaryLink} to="/organizations/new">
-          {t('organizations.new')}
-        </Link>
-      </div>
-      <form className={styles.search} onSubmit={submit} aria-label={t('organizations.search')}>
-        <TextField
-          label={t('organizations.search')}
-          placeholder={t('organizations.search')}
-          value={query}
-          maxLength={255}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <Button type="submit" disabled={result.loading}>
-          {t('organizations.searchButton')}
-        </Button>
-      </form>
-      {result.loading && <p role="status">{t('app.loading')}</p>}
+    <section className="grid min-w-0 gap-6">
+      <PageHeader title={t('organizations.title')} description={t('organizations.description')} actions={
+        <LinkButton to="/organizations/new"><Plus size={18} aria-hidden="true" />{t('organizations.new')}</LinkButton>
+      } />
+      <Card>
+        <form className="flex flex-wrap items-end gap-3" onSubmit={submit} aria-label={t('organizations.search')}>
+          <div className="min-w-0 flex-1 basis-64">
+            <TextField label={t('organizations.search')} placeholder={t('organizations.search')} value={query} maxLength={255} className="mb-0!" onChange={(event) => setQuery(event.target.value)} />
+          </div>
+          <Button type="submit" variant="secondary" disabled={result.loading} className="min-h-12"><Search size={18} aria-hidden="true" />{t('organizations.searchButton')}</Button>
+        </form>
+      </Card>
+      {result.loading && <Spinner label={t('app.loading')} />}
       {result.error !== undefined && (
         <>
           <ErrorNotice error={result.error} />
@@ -67,7 +62,7 @@ function PlatformOrganizations() {
       )}
       {result.value && (
         <>
-          <Table caption={t('organizations.total', { count: result.value.meta.total })}>
+          <Table id="organizations-table" caption={t('organizations.total', { count: result.value.meta.total })}>
             <thead>
               <tr>
                 <th scope="col">{t('organizations.legalName')}</th>
@@ -98,16 +93,12 @@ function PlatformOrganizations() {
               ))}
             </tbody>
           </Table>
-          {result.value.data.length === 0 && <p className={styles.empty}>{t('organizations.empty')}</p>}
-          <div className={styles.pagination}>
-            <Button disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
-              {t('organizations.previous')}
-            </Button>
-            <span>{t('organizations.page', { page, total: totalPages })}</span>
-            <Button disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>
-              {t('organizations.next')}
-            </Button>
-          </div>
+          {result.value.data.length === 0 && <p className="m-0 rounded-card border border-dashed border-line bg-panel px-5 py-10 text-center text-sm text-body">{t('organizations.empty')}</p>}
+          <Pagination page={page} pageCount={totalPages} onPageChange={setPage} variant="compact" controls="organizations-table" labels={{
+            navigation: t('organizations.title'), previous: t('organizations.previous'), next: t('organizations.next'),
+            page: (value) => t('organizations.page', { page: value, total: totalPages }),
+            status: (value, total) => t('organizations.page', { page: value, total }),
+          }} />
         </>
       )}
     </section>

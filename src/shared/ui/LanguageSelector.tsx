@@ -1,13 +1,14 @@
+import { SelectField } from './SelectField'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../../app/services/services-context'
 
 export function LanguageSelector() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { auth } = useServices()
   const state = useSession()
 
   return (
-    <select
+    <SelectField label={t('app.language')} className="mb-0!"
       value={i18n.resolvedLanguage ?? 'es'}
       onChange={(event) => {
         const lang = event.target.value
@@ -16,18 +17,10 @@ export function LanguageSelector() {
           void auth.updateSettings({ language: lang })
         }
       }}
-      style={{
-        padding: '0.5rem',
-        borderRadius: '6px',
-        border: '1px solid var(--color-border)',
-        background: 'transparent',
-        color: 'inherit',
-        fontFamily: 'inherit',
-        cursor: 'pointer'
-      }}
+
     >
       <option value="es">Español</option>
       <option value="en">English</option>
-    </select>
+    </SelectField>
   )
 }

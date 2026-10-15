@@ -12,6 +12,10 @@
     background-color: var(--color-background);
   }
 
+  :root.dark {
+    color-scheme: dark;
+  }
+
   body {
     margin: 0;
     min-width: 320px;
