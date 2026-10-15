@@ -1,37 +1,38 @@
 import { useState, useEffect } from 'react'
-import { NavLink, Navigate, Outlet } from 'react-router'
+import { NavLink, Navigate, Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../services/services-context'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { Button } from '../../shared/ui/Button'
 import { Avatar } from '../../shared/ui/Avatar'
-import { Building2, User, LogOut, Menu, Palette } from 'lucide-react'
+import { Building2, User, LogOut, Menu, Palette, ShieldCheck } from 'lucide-react'
 import styles from './ProtectedLayout.module.css'
 
 export function ProtectedLayout() {
   const { t, i18n } = useTranslation()
   const { auth } = useServices()
   const state = useSession()
+  const location = useLocation()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
+  const preferredLanguage = state.status === 'authenticated' ? state.session.identity.language : undefined
+  const preferredTheme = state.status === 'authenticated' ? state.session.identity.theme : undefined
 
   useEffect(() => {
-    if (state.status === 'authenticated') {
-      const { language, theme } = state.session.identity
-      if (language && i18n.resolvedLanguage !== language) {
-        void i18n.changeLanguage(language)
-      }
-      if (theme) {
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark')
-        } else {
-          document.documentElement.classList.remove('dark')
-        }
+    if (preferredLanguage && i18n.resolvedLanguage !== preferredLanguage) {
+      void i18n.changeLanguage(preferredLanguage)
+    }
+    if (preferredTheme) {
+      if (preferredTheme === 'dark') {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
       }
     }
-  }, [state.status, state.status === 'authenticated' ? state.session.identity.language : null, state.status === 'authenticated' ? state.session.identity.theme : null, i18n])
+  }, [preferredLanguage, preferredTheme, i18n])
 
   async function logout() {
     setBusy(true)
@@ -66,7 +67,7 @@ export function ProtectedLayout() {
     )
 
   const { session } = state
-  const platform = session.context.mod === 'SUPERADMIN_PLATAFORMA'
+  const platform = session.context.accessMode === 'PLATFORM_SUPERADMIN'
 
   return (
     <div className={styles.shell}>
@@ -86,6 +87,10 @@ export function ProtectedLayout() {
           <NavLink to="/organizations">
             <Building2 size={20} />
             <span>{platform ? t('organizations.title') : t('organizations.current')}</span>
+          </NavLink>
+          <NavLink to="/security">
+            <ShieldCheck size={20} />
+            <span>{t('modules.securityConsole')}</span>
           </NavLink>
           <NavLink to="/styleguide">
             <Palette size={20} />
@@ -133,14 +138,20 @@ export function ProtectedLayout() {
             </div>
           </div>
           <div className={styles.topActions}>
-            <div className={styles.badgeBtn}>Modo FEDERADO</div>
-            <div className={styles.badgeBtn}>Contexto de soporte</div>
+            {location.pathname === '/security' && (
+              <button className={styles.badgeBtn} type="button" onClick={() => setSupportOpen(true)}>
+                {t('securityConsole.supportContext')}
+              </button>
+            )}
           </div>
         </header>
 
-        <main className={styles.main} key={session.context.sid}>
+        <main
+          className={styles.main}
+          key={`${session.context.accessMode}:${session.context.organization?.id ?? ''}`}
+        >
           {error !== undefined && <ErrorNotice error={error} />}
-          <Outlet />
+          <Outlet context={{ supportOpen, setSupportOpen }} />
         </main>
       </div>
     </div>

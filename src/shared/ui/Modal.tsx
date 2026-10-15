@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 import { useOverlayContainer } from './use-overlay-container'
 
 interface ModalProps {
-  trigger: ReactElement
+  trigger?: ReactElement
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
@@ -18,7 +18,7 @@ export function Modal({ trigger, open, onOpenChange, title, description, closeLa
   const container = useOverlayContainer()
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Trigger render={trigger} />
+      {trigger && <Dialog.Trigger render={trigger} />}
       <Dialog.Portal container={container}>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-navy/55 backdrop-blur-[3px]" />
         <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-hidden -translate-x-1/2 -translate-y-1/2 flex-col rounded-card border border-solid border-line bg-panel font-sans text-body shadow-surface focus:outline-none">

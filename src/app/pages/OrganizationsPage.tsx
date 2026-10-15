@@ -13,8 +13,8 @@ import styles from './Workspace.module.css'
 export function OrganizationsPage() {
   const state = useSession()
   if (state.status !== 'authenticated') return null
-  if (state.session.context.mod !== 'SUPERADMIN_PLATAFORMA')
-    return <Navigate to={`/organizations/${state.session.context.tid}`} replace />
+  if (state.session.context.accessMode !== 'PLATFORM_SUPERADMIN')
+    return <Navigate to={`/organizations/${state.session.context.organization?.id ?? ''}`} replace />
   return <PlatformOrganizations />
 }
 

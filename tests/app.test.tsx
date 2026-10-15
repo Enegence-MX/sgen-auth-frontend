@@ -44,7 +44,9 @@ describe('current backend flows', () => {
     await user.type(await screen.findByLabelText('Razón social'), 'Duplicate Organization')
     await user.type(screen.getByLabelText('RFC maestro'), 'AAA010101AA1')
     await user.click(screen.getByRole('button', { name: 'Crear organización' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe una organización con este RFC.')
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Ya existe una organización con este RFC.',
+    )
     expect(screen.getByLabelText('Razón social')).toHaveValue('Duplicate Organization')
   })
   it('requires tenant selection before showing a shared identity session', async () => {
@@ -73,17 +75,281 @@ describe('current backend flows', () => {
     })
     expect(await screen.findByRole('alert')).toHaveTextContent('Organización no encontrada')
   })
-  it.each(['INVALID_CREDENTIALS', 'MFA_REQUIRED', 'FEDERATED_LOGIN_REQUIRED', 'PASSWORD_CHANGE_REQUIRED'])(
-    'does not authenticate when backend returns %s',
-    async (code) => {
-      const user = userEvent.setup()
-      const { router } = render(fixture({ loginError: code }).services)
-      await signIn(user)
-      expect(await screen.findByRole('alert')).toBeInTheDocument()
-      expect(router.state.location.pathname).toBe('/login')
-      expect(screen.getByLabelText('Contraseña')).toHaveValue('')
-    },
-  )
+  it('loads and saves security policies and keeps unavailable console tables empty', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: tenantSession() })
+    render(setup.services, '/security')
+    expect(await screen.findByRole('heading', { name: 'Consola de seguridad' })).toBeInTheDocument()
+    expect(await screen.findByLabelText('Longitud mínima')).toHaveValue(12)
+    const passwordHistory = screen.getByLabelText('Histórico sin reúso')
+    expect(passwordHistory).toHaveValue(5)
+    await user.clear(passwordHistory)
+    await user.type(passwordHistory, '7')
+    expect(screen.getByText('Código por correo')).toBeInTheDocument()
+    expect(screen.getByText(/Aplicación autenticadora/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /HÍBRIDO/ })).toHaveAttribute('aria-pressed', 'true')
+    await user.click(screen.getByRole('button', { name: /FEDERADO/ }))
+    expect(screen.getByRole('button', { name: /FEDERADO/ })).toHaveAttribute('aria-pressed', 'true')
+    await user.click(screen.getByRole('switch', { name: 'Permitir opt-out con deslinde' }))
+    await user.click(screen.getByRole('radio', { name: /CONFIAR EN EL IdP/ }))
+    expect(screen.queryByText(/SMS/i)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('switch', { name: 'Exigir MFA' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'La política de seguridad se guardó correctamente.',
+    )
+    expect(setup.fetcher).toHaveBeenCalledWith(
+      expect.stringContaining(`/organizations/${alpha}/security-policy`),
+      expect.objectContaining({ method: 'PATCH' }),
+    )
+    expect(setup.policies.get(alpha)?.mfaRequired).toBe(false)
+    const policyUpdate = setup.fetcher.mock.calls.find(
+      ([url, init]) =>
+        String(url).includes(`/organizations/${alpha}/security-policy`) && init?.method === 'PATCH',
+    )
+    expect(policyUpdate).toBeDefined()
+    const savedPolicy = JSON.parse(String(policyUpdate?.[1]?.body)) as Record<string, unknown>
+    expect(savedPolicy).not.toHaveProperty('authMode')
+    expect(savedPolicy).not.toHaveProperty('federatedMfaMode')
+    expect(savedPolicy).not.toHaveProperty('mfaAllowOptOut')
+    expect(savedPolicy).not.toHaveProperty('passwordHistoryCount')
+    expect(screen.getByLabelText('Histórico sin reúso')).toHaveValue(7)
+
+    await user.click(screen.getByRole('tab', { name: /Mapeo de grupos/ }))
+    expect(await screen.findByRole('table', { name: 'Mapeo de grupos' })).toBeInTheDocument()
+    expect(screen.queryByText('Mapeo de demostración agregado.')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: /Proveedores de identidad/ }))
+    expect(
+      await screen.findByRole('table', { name: 'Proveedores de identidad' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Dominios verificados' })).toBeInTheDocument()
+    expect(screen.queryByText(/demo-industrial/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: /Usuarios y roles/ }))
+    expect(await screen.findByRole('heading', { name: 'Usuarios y roles' })).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Usuarios y roles' })).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: 'Bitácora de auditoría' }))
+    expect(await screen.findByRole('table', { name: 'Bitácora de auditoría' })).toBeInTheDocument()
+  }, 15000)
+  it('sends an invitation with backend roles to the active organization', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: tenantSession() })
+    render(setup.services, '/security')
+    await user.click(await screen.findByRole('tab', { name: /Usuarios y roles/ }))
+    await user.type(screen.getByLabelText('Correo electrónico'), 'new.member@example.test')
+    const auditorRole = screen.getByRole('checkbox', {
+      name: /Auditor interno|Internal auditor/,
+    })
+    await user.click(auditorRole)
+    expect(auditorRole).toBeChecked()
+    expect(screen.getByRole('button', { name: 'Enviar invitación' })).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: 'Enviar invitación' }))
+    await waitFor(() =>
+      expect(setup.fetcher).toHaveBeenCalledWith(
+        expect.stringContaining(`/organizations/${alpha}/invitations`),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            email: 'new.member@example.test',
+            roles: ['INTERNAL_AUDITOR'],
+          }),
+        }),
+      ),
+    )
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Invitación enviada a new.member@example.test con estos roles: INTERNAL_AUDITOR.',
+    )
+  })
+  it('accepts an invitation for a new account and records the MFA waiver choice', async () => {
+    const user = userEvent.setup()
+    const setup = fixture()
+    render(setup.services, '/invitations/test_invitation_token_123456')
+    expect(await screen.findByRole('list', { name: 'Progreso de activación' })).toBeInTheDocument()
+    expect(screen.getByText('Política de la organización')).toBeInTheDocument()
+    expect(screen.getByText('90 días')).toBeInTheDocument()
+    expect(screen.getByText('5 contraseñas')).toBeInTheDocument()
+    await user.type(await screen.findByLabelText('Nombre completo'), 'New Member')
+    await user.type(screen.getByLabelText('Crea una contraseña'), 'a-long-test-password')
+    await user.type(screen.getByLabelText('Confirma la contraseña'), 'a-long-test-password')
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(
+      await screen.findByRole('heading', { name: 'Verificación en dos pasos' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('radio', {
+        name: /Aplicación autenticadora|Authenticator app/,
+      }),
+    ).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Volver a la contraseña' }))
+    expect(await screen.findByLabelText('Nombre completo')).toHaveValue('New Member')
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await user.click(
+      await screen.findByRole('radio', {
+        name: /opción disponible.*omitir MFA|available option to waive MFA/i,
+      }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Aceptar invitación' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Aceptaste la invitación.')
+    expect(setup.fetcher).toHaveBeenCalledWith(
+      expect.stringContaining('/invitations/accept'),
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"mfa":"WAIVE"'),
+      }),
+    )
+  })
+  it('renders invitation details when the API omits newer policy fields', async () => {
+    const setup = fixture({
+      invitation: {
+        passwordExpiryDays: undefined,
+        passwordHistoryCount: undefined,
+        mfaAllowedMethods: undefined,
+        authMode: undefined,
+      },
+    })
+    render(setup.services, '/invitations/test_invitation_token_123456')
+    expect(await screen.findByText('Política de la organización')).toBeInTheDocument()
+    expect(screen.getByText('invitee@example.test')).toBeInTheDocument()
+  })
+  it('verifies the email when enabling optional MFA during invitation acceptance', async () => {
+    const user = userEvent.setup()
+    const setup = fixture()
+    render(setup.services, '/invitations/test_invitation_token_123456')
+    await user.type(await screen.findByLabelText('Nombre completo'), 'Optional MFA Member')
+    await user.type(screen.getByLabelText('Crea una contraseña'), 'a-long-test-password')
+    await user.type(screen.getByLabelText('Confirma la contraseña'), 'a-long-test-password')
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Enviar código de activación',
+      }),
+    )
+    await user.type(await screen.findByLabelText('Código de verificación'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Activar verificación y aceptar' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Aceptaste la invitación.')
+    const acceptCall = setup.fetcher.mock.calls.find(([url]) =>
+      String(url).endsWith('/invitations/accept'),
+    )
+    expect(JSON.parse(String(acceptCall?.[1]?.body))).toMatchObject({
+      token: 'test_invitation_token_123456',
+      mfa: 'ENABLE',
+      mfaCode: '123456',
+    })
+  })
+  it('creates a new account while enforcing the organization’s required MFA policy', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({
+      invitation: {
+        mfaRequired: true,
+        mfaWaiver: null,
+      },
+    })
+    render(setup.services, '/invitations/test_invitation_token_123456')
+    await user.type(await screen.findByLabelText('Nombre completo'), 'Required MFA Member')
+    await user.type(screen.getByLabelText('Crea una contraseña'), 'a-long-test-password')
+    await user.type(screen.getByLabelText('Confirma la contraseña'), 'a-long-test-password')
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(
+      await screen.findByRole('heading', { name: 'Verificación en dos pasos' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Continuar' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Enviar código de activación' }))
+    expect(
+      await screen.findByText(/Enviamos un código a i\*{6}e@example\.test/),
+    ).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Código de verificación'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Activar verificación y aceptar' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Aceptaste la invitación.')
+    const acceptCall = setup.fetcher.mock.calls.find(([url]) =>
+      String(url).endsWith('/invitations/accept'),
+    )
+    expect(acceptCall).toBeDefined()
+    expect(JSON.parse(String(acceptCall?.[1]?.body))).toEqual({
+      token: 'test_invitation_token_123456',
+      fullName: 'Required MFA Member',
+      password: 'a-long-test-password',
+      mfaChallengeToken: 'test_invitation_mfa_token_123456789',
+      mfaCode: '123456',
+    })
+  })
+  it('accepts an invitation for an existing account without asking for a new password', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({
+      invitation: {
+        hasAccount: true,
+        hasMfa: true,
+        mfaRequired: true,
+        mfaWaiver: null,
+      },
+    })
+    render(setup.services, '/invitations/test_invitation_token_123456')
+    expect(await screen.findByText(/Este correo ya tiene una cuenta/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Activar verificación y aceptar' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Aceptaste la invitación.')
+    const acceptCall = setup.fetcher.mock.calls.find(([url]) =>
+      String(url).endsWith('/invitations/accept'),
+    )
+    expect(acceptCall).toBeDefined()
+    expect(JSON.parse(String(acceptCall?.[1]?.body))).toEqual({
+      token: 'test_invitation_token_123456',
+    })
+  })
+  it('completes the email MFA challenge issued by the backend during sign-in', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ mfaLogin: true })
+    render(setup.services)
+    await user.type(await screen.findByLabelText('Correo electrónico'), 'platform@example.test')
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await user.type(await screen.findByLabelText('Contraseña'), 'test-password')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    await user.type(await screen.findByLabelText('Código de verificación'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Verificar código' }))
+    expect(await screen.findByText('Development Alpha')).toBeInTheDocument()
+    expect(setup.fetcher).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/mfa/verify'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          challengeToken: 'test_mfa_challenge_token_123456',
+          code: '123456',
+        }),
+      }),
+    )
+  })
+  it('lets platform admins select an organization and opens support from the header', async () => {
+    const user = userEvent.setup()
+    render(fixture({ initial: platform }).services, '/security')
+    expect(await screen.findByRole('heading', { name: 'Consola de seguridad' })).toBeInTheDocument()
+    await user.selectOptions(await screen.findByLabelText('Organización'), alpha)
+    expect(await screen.findByLabelText('Longitud mínima')).toHaveValue(12)
+    expect(screen.getByLabelText('Longitud mínima')).toBeDisabled()
+    expect(screen.getByText(/puedes consultar la política/i)).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Contexto de soporte' })).toHaveLength(1)
+    await user.click(screen.getByRole('button', { name: 'Contexto de soporte' }))
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+  })
+  it('opens the empty support-context structure without fictitious grants', async () => {
+    const user = userEvent.setup()
+    render(fixture({ initial: tenantSession() }).services, '/security')
+    await user.click(await screen.findByRole('button', { name: /Contexto de soporte/ }))
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Contexto de soporte' })).toBeInTheDocument()
+    expect(screen.queryByText('Industrias Demo, S.A. de C.V.')).not.toBeInTheDocument()
+  })
+  it.each([
+    'INVALID_CREDENTIALS',
+    'MFA_REQUIRED',
+    'FEDERATED_LOGIN_REQUIRED',
+    'PASSWORD_CHANGE_REQUIRED',
+  ])('does not authenticate when backend returns %s', async (code) => {
+    const user = userEvent.setup()
+    const { router } = render(fixture({ loginError: code }).services)
+    await signIn(user)
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/login')
+    expect(screen.getByLabelText('Contraseña')).toHaveValue('')
+  })
   it('renews and closes the current session', async () => {
     const user = userEvent.setup()
     render(fixture({ initial: platform }).services, '/session')

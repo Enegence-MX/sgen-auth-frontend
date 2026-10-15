@@ -31,7 +31,7 @@ export function SessionPage() {
   }
   if (state.status !== 'authenticated') return null
   const { session } = state
-  const platform = session.context.mod === 'SUPERADMIN_PLATAFORMA'
+  const platform = session.context.accessMode === 'PLATFORM_SUPERADMIN'
   return (
     <section>
       <div className={styles.heading}>
@@ -75,11 +75,11 @@ export function SessionPage() {
             <ThemeSelector />
           </dd>
         </div>
-        {session.context.tid && (
+        {session.context.organization && (
           <div>
             <dt>{t('session.organization')}</dt>
             <dd>
-              <Link to={`/organizations/${session.context.tid}`}>{t('organizations.current')}</Link>
+              <Link to={`/organizations/${session.context.organization.id}`}>{session.context.organization.legalName}</Link>
             </dd>
           </div>
         )}

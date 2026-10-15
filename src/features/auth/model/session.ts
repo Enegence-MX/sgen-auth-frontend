@@ -11,12 +11,8 @@ export interface Identity {
   theme?: string
 }
 export interface SessionContext {
-  sub: string
-  sid: string
-  tid: string | null
-  mid: string | null
-  rbv: number | null
-  mod: 'USUARIO_CLIENTE' | 'SUPERADMIN_PLATAFORMA'
+  accessMode: 'TENANT_USER' | 'PLATFORM_SUPERADMIN'
+  organization: { id: string; legalName: string } | null
 }
 export interface Session {
   identity: Identity
@@ -25,7 +21,7 @@ export interface Session {
 }
 export interface TenantChoice {
   tenantId: string
-  razonSocial: string
+  legalName: string
 }
 
 export function tenantChoices(error: unknown): TenantChoice[] {
@@ -37,6 +33,6 @@ export function tenantChoices(error: unknown): TenantChoice[] {
     return []
   return error.details.filter(
     (item: unknown): item is TenantChoice =>
-      isRecord(item) && typeof item.tenantId === 'string' && typeof item.razonSocial === 'string',
+      isRecord(item) && typeof item.tenantId === 'string' && typeof item.legalName === 'string',
   )
 }

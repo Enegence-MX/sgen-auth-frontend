@@ -44,7 +44,7 @@ export function NewOrganizationPage() {
     }
   }
   if (state.status !== 'authenticated') return null
-  if (state.session.context.mod !== 'SUPERADMIN_PLATAFORMA') return <Navigate to="/organizations" replace />
+  if (state.session.context.accessMode !== 'PLATFORM_SUPERADMIN') return <Navigate to="/organizations" replace />
   return (
     <section className={styles.formPanel}>
       <Link to="/organizations">{t('app.back')}</Link>

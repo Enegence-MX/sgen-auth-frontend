@@ -2,6 +2,7 @@ import { isUnauthorized } from '../../../shared/api/errors'
 import type { AuthApi } from '../api/auth-api'
 import type { Credentials } from './credentials'
 import type { Session } from './session'
+import type { MfaChallenge } from './mfa-challenge'
 
 export type SessionState =
   | { status: 'loading'; session: null }
@@ -63,9 +64,17 @@ export class SessionStore {
       )
     }
   }
-  async login(credentials: Credentials, tenantId?: string): Promise<void> {
+  async login(credentials: Credentials, tenantId?: string): Promise<MfaChallenge | void> {
     this.revision++
-    await this.api.login(credentials, tenantId)
+    const result = await this.api.login(credentials, tenantId)
+    if ('mfaRequired' in result && result.mfaRequired) return result
+    const session = await this.api.profile()
+    this.update({ status: 'authenticated', session })
+    this.broadcast()
+  }
+  async verifyMfa(challengeToken: string, code: string): Promise<void> {
+    this.revision++
+    await this.api.verifyMfa(challengeToken, code)
     const session = await this.api.profile()
     this.update({ status: 'authenticated', session })
     this.broadcast()

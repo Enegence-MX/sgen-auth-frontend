@@ -17,7 +17,7 @@ export function OrganizationPage() {
   const location = useLocation()
   const load = useCallback((signal: AbortSignal) => organizations.detail(id, signal), [organizations, id])
   const result = useResource(load)
-  const platform = state.session?.context.mod === 'SUPERADMIN_PLATAFORMA'
+  const platform = state.session?.context.accessMode === 'PLATFORM_SUPERADMIN'
   const item = result.value
   const created = isRecord(location.state) && location.state.created === true
   return (

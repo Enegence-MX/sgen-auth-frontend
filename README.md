@@ -7,7 +7,8 @@ Frontend de SGEn conectado al backend NestJS actual: login, selección de organi
 - Sesiones con cookies HttpOnly y CSRF; sin tokens en almacenamiento web.
 - Renovación de sesión coordinada entre pestañas y rutas protegidas.
 - Plataforma: listado, búsqueda, alta y detalle. Cliente: detalle de su organización y permisos.
-- Sin registro público. MFA, federación e invitaciones siguen pendientes en backend.
+- Consola de seguridad en `/security`: un superadministrador puede seleccionar una organización y consultar su política; solo el administrador de esa organización puede modificarla mediante el backend. La pestaña Usuarios y roles permite enviar invitaciones con roles reales; el listado de miembros y los cambios posteriores de roles aún no tienen endpoints. Proveedores de identidad, mapeo de grupos, auditoría, dominios y contexto de soporte siguen siendo demostrativos. El acceso al diálogo de contexto de soporte está en la cabecera de la consola.
+- Activación pública por invitación en `/invitations/:token`: valida el enlace, crea una cuenta nueva o vincula una existente y aplica las reglas de contraseña y MFA devueltas por el backend. El MFA de correo se completa con código de un solo uso durante el inicio de sesión. No hay registro público.
 
 ## Tech Stack
 
@@ -42,11 +43,11 @@ npm run dev:logs
 npm run dev:down
 ```
 
-Frontend: `http://localhost:5173` por defecto. Este entorno usa `http://localhost:5175`, configurado con `FRONTEND_PORT` en `sgen-auth-backend/.env.development.local`.
+Frontend: `http://localhost:5173` por defecto. El lanzador de la raíz conserva el puerto `FRONTEND_PORT` existente en `sgen-auth-backend/.env.development.local` al completar por primera vez el `.env` actual; para cambiarlo después, edita `FRONTEND_PORT` en `sgen-auth-backend/.env`.
 
 Para ejecutar sólo Vite desde este repositorio: `npm run dev`. Para validar: `npm run check` (lint, tipos, pruebas y build).
 
-Cuentas locales: `platform@example.test` (alta/listado), `admin.alpha@example.test`, `admin.beta@example.test`, `shared@example.test` (selector de organización) y `suspended@example.test` (acceso rechazado). Contraseña: valor de `DEV_SEED_PASSWORD` en `sgen-auth-backend/.env.development.local`; no se incluye en el frontend.
+El esquema actual ya no carga automáticamente las cuentas de prueba del esquema anterior. Crea el primer superadministrador con `npm run platform:create-admin` desde la raíz y usa las credenciales que proporciones. Los datos previos permanecen en su volumen; el nuevo esquema usa un volumen independiente.
 
 ## Organization
 
@@ -55,6 +56,7 @@ src/
   app/             Rutas, pantallas, sesión compartida y composición de servicios
   features/auth/   API de autenticación, estado de sesión y tipos
   features/organizations/  API y tipos de organizaciones
+  features/invitations/    API y tipos de invitaciones
   shared/          Transporte HTTP, traducciones, controles y estilos
   config/          Configuración pública del cliente
 tests/             Regresiones de sesión, transporte, pantallas y traducciones

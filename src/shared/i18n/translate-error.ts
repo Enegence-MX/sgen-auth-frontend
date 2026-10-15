@@ -7,6 +7,7 @@ const codes = {
   CSRF_INVALID: 'csrf',
   PLATFORM_REQUIRED: 'forbidden',
   ACCESS_DENIED: 'forbidden',
+  PERMISSION_REQUIRED: 'forbidden',
   MFA_REQUIRED: 'mfa',
   FEDERATED_LOGIN_REQUIRED: 'federated',
   PASSWORD_CHANGE_REQUIRED: 'passwordChange',
@@ -18,6 +19,16 @@ const codes = {
   INVALID_DATA: 'validation',
   RATE_LIMITED: 'rateLimit',
   INVALID_RESPONSE: 'invalidResponse',
+  INVITATION_NOT_FOUND: 'invitationNotFound',
+  INVITATION_EXPIRED: 'invitationExpired',
+  INVITATION_NOT_PENDING: 'invitationUsed',
+  PASSWORD_TOO_SHORT: 'passwordTooShort',
+  MFA_REQUIRED_BY_ORGANIZATION: 'mfaRequiredByOrganization',
+  MFA_CHOICE_REQUIRED: 'mfaChoiceRequired',
+  MFA_CHALLENGE_INVALID: 'mfaChallengeInvalid',
+  INVALID_MFA_CODE: 'invalidMfaCode',
+  INVITATION_ALREADY_PENDING: 'invitationAlreadyPending',
+  INVALID_ROLES: 'validation',
 } as const
 export function translateError(error: unknown, t: TFunction): string {
   if (error instanceof ApiError) {
