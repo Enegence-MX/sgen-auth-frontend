@@ -1,3 +1,4 @@
+import { AuditPanel } from '../../features/audit/components/AuditPanel'
 import { useCallback, useState, type SubmitEvent } from 'react'
 import { useOutletContext } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -198,7 +199,7 @@ export function SecurityConsolePage() {
     { value: 'providers', label: <><Fingerprint size={16} aria-hidden="true" />{t('securityConsole.providers')}</>, content: ProviderPanel() },
     { value: 'users', label: <><Users size={16} aria-hidden="true" />{t('securityConsole.users')}</>, content: UsersPanel() },
     { value: 'groups', label: <><Building2 size={16} aria-hidden="true" />{t('securityConsole.groups')}</>, content: GroupsPanel() },
-    { value: 'audit', label: <><LockKeyhole size={16} aria-hidden="true" />{t('securityConsole.audit')}</>, content: AuditPanel() },
+    { value: 'audit', label: <><LockKeyhole size={16} aria-hidden="true" />{t('securityConsole.audit')}</>, content: <AuditPanel tenantId={isPlatform ? selectedOrganizationId || undefined : undefined} /> },
   ]
 
   function PolicyPanel() {
@@ -501,20 +502,6 @@ export function SecurityConsolePage() {
     )
   }
 
-  function AuditPanel() {
-    return (
-      <div className="grid min-w-0 grid-cols-1 gap-5">
-        <div>
-          <h2 className="m-0 font-heading text-xl font-semibold text-ink">{t('securityConsole.audit')}</h2>
-          <p className="mt-2 mb-0 text-sm text-body">{t('securityConsole.auditDescription')}</p>
-        </div>
-        <Table caption={t('securityConsole.audit')}>
-          <thead><tr><th scope="col">{t('securityConsole.date')}</th><th scope="col">{t('securityConsole.actor')}</th><th scope="col">{t('securityConsole.event')}</th><th scope="col">{t('securityConsole.detail')}</th></tr></thead>
-          <tbody />
-        </Table>
-      </div>
-    )
-  }
 
   return (
     <section className="grid min-w-0 grid-cols-1 gap-6">

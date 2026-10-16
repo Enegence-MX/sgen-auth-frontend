@@ -1,6 +1,8 @@
+import { auditEs } from './audit'
 import type { TranslationCatalog } from './en'
 import { styleguideEs } from './styleguide'
 export const es = {
+  audit: auditEs,
   styleguide: styleguideEs,
   app: {
     skipContent: 'Saltar al contenido',

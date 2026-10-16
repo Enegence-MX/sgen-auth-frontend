@@ -131,7 +131,7 @@ describe('current backend flows', () => {
     expect(await screen.findByRole('heading', { name: 'Usuarios y roles' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Usuarios y roles' })).toBeInTheDocument()
     await user.click(screen.getByRole('tab', { name: 'Bitácora de auditoría' }))
-    expect(await screen.findByRole('table', { name: 'Bitácora de auditoría' })).toBeInTheDocument()
+    expect(await screen.findByText('Tu rol no tiene permiso para consultar la auditoría.')).toBeInTheDocument()
   }, 15000)
   it('sends an invitation with backend roles to the active organization', async () => {
     const user = userEvent.setup()
