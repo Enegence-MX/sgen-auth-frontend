@@ -82,10 +82,7 @@ describe('current backend flows', () => {
     render(setup.services, '/security')
     expect(await screen.findByRole('heading', { name: 'Consola de seguridad' })).toBeInTheDocument()
     expect(await screen.findByLabelText('Longitud mínima')).toHaveValue(12)
-    const passwordHistory = screen.getByLabelText('Histórico sin reúso')
-    expect(passwordHistory).toHaveValue(5)
-    await user.clear(passwordHistory)
-    await user.type(passwordHistory, '7')
+    expect(screen.queryByLabelText('Histórico sin reúso')).not.toBeInTheDocument()
     expect(screen.getByText('Código por correo')).toBeInTheDocument()
     expect(screen.getByText(/Aplicación autenticadora/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /HÍBRIDO/ })).toHaveAttribute('aria-pressed', 'true')
@@ -114,7 +111,6 @@ describe('current backend flows', () => {
     expect(savedPolicy).not.toHaveProperty('federatedMfaMode')
     expect(savedPolicy).not.toHaveProperty('mfaAllowOptOut')
     expect(savedPolicy).not.toHaveProperty('passwordHistoryCount')
-    expect(screen.getByLabelText('Histórico sin reúso')).toHaveValue(7)
 
     await user.click(screen.getByRole('tab', { name: /Mapeo de grupos/ }))
     expect(await screen.findByRole('table', { name: 'Mapeo de grupos' })).toBeInTheDocument()
@@ -169,7 +165,7 @@ describe('current backend flows', () => {
     expect(await screen.findByRole('list', { name: 'Progreso de activación' })).toBeInTheDocument()
     expect(screen.getByText('Política de la organización')).toBeInTheDocument()
     expect(screen.getByText('90 días')).toBeInTheDocument()
-    expect(screen.getByText('5 contraseñas')).toBeInTheDocument()
+    expect(screen.queryByText('Histórico sin reúso')).not.toBeInTheDocument()
     await user.type(await screen.findByLabelText('Nombre completo'), 'New Member')
     await user.type(screen.getByLabelText('Crea una contraseña'), 'a-long-test-password')
     await user.type(screen.getByLabelText('Confirma la contraseña'), 'a-long-test-password')
@@ -204,38 +200,31 @@ describe('current backend flows', () => {
     const setup = fixture({
       invitation: {
         passwordExpiryDays: undefined,
-        passwordHistoryCount: undefined,
         mfaAllowedMethods: undefined,
         authMode: undefined,
       },
     })
     render(setup.services, '/invitations/test_invitation_token_123456')
     expect(await screen.findByText('Política de la organización')).toBeInTheDocument()
-    expect(screen.getByText('invitee@example.test')).toBeInTheDocument()
+    expect(screen.getByText('mariana.torres@energia-bajio.test')).toBeInTheDocument()
   })
-  it('verifies the email when enabling optional MFA during invitation acceptance', async () => {
+  it('enables optional MFA without requesting a second activation code', async () => {
     const user = userEvent.setup()
     const setup = fixture()
     render(setup.services, '/invitations/test_invitation_token_123456')
-    await user.type(await screen.findByLabelText('Nombre completo'), 'Optional MFA Member')
+    await user.type(await screen.findByLabelText('Nombre completo'), 'Gabriel Navarro')
     await user.type(screen.getByLabelText('Crea una contraseña'), 'a-long-test-password')
     await user.type(screen.getByLabelText('Confirma la contraseña'), 'a-long-test-password')
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
-    await user.click(
-      await screen.findByRole('button', {
-        name: 'Enviar código de activación',
-      }),
-    )
-    await user.type(await screen.findByLabelText('Código de verificación'), '123456')
     await user.click(screen.getByRole('button', { name: 'Activar verificación y aceptar' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Aceptaste la invitación.')
+    expect(setup.fetcher.mock.calls.some(([url]) => String(url).endsWith('/invitations/mfa/start'))).toBe(false)
     const acceptCall = setup.fetcher.mock.calls.find(([url]) =>
       String(url).endsWith('/invitations/accept'),
     )
     expect(JSON.parse(String(acceptCall?.[1]?.body))).toMatchObject({
       token: 'test_invitation_token_123456',
       mfa: 'ENABLE',
-      mfaCode: '123456',
     })
   })
   it('creates a new account while enforcing the organization’s required MFA policy', async () => {
@@ -247,7 +236,7 @@ describe('current backend flows', () => {
       },
     })
     render(setup.services, '/invitations/test_invitation_token_123456')
-    await user.type(await screen.findByLabelText('Nombre completo'), 'Required MFA Member')
+    await user.type(await screen.findByLabelText('Nombre completo'), 'Mariana Torres')
     await user.type(screen.getByLabelText('Crea una contraseña'), 'a-long-test-password')
     await user.type(screen.getByLabelText('Confirma la contraseña'), 'a-long-test-password')
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
@@ -255,23 +244,17 @@ describe('current backend flows', () => {
       await screen.findByRole('heading', { name: 'Verificación en dos pasos' }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Continuar' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Enviar código de activación' }))
-    expect(
-      await screen.findByText(/Enviamos un código a i\*{6}e@example\.test/),
-    ).toBeInTheDocument()
-    await user.type(screen.getByLabelText('Código de verificación'), '123456')
     await user.click(screen.getByRole('button', { name: 'Activar verificación y aceptar' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Aceptaste la invitación.')
+    expect(setup.fetcher.mock.calls.some(([url]) => String(url).endsWith('/invitations/mfa/start'))).toBe(false)
     const acceptCall = setup.fetcher.mock.calls.find(([url]) =>
       String(url).endsWith('/invitations/accept'),
     )
     expect(acceptCall).toBeDefined()
     expect(JSON.parse(String(acceptCall?.[1]?.body))).toEqual({
       token: 'test_invitation_token_123456',
-      fullName: 'Required MFA Member',
+      fullName: 'Mariana Torres',
       password: 'a-long-test-password',
-      mfaChallengeToken: 'test_invitation_mfa_token_123456789',
-      mfaCode: '123456',
     })
   })
   it('accepts an invitation for an existing account without asking for a new password', async () => {

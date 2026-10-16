@@ -4,7 +4,6 @@ import type {
   CreatedInvitation,
   InvitationAcceptance,
   InvitationDetails,
-  InvitationMfaChallenge,
   MfaChoice,
 } from '../model/invitation'
 
@@ -28,22 +27,11 @@ export function createInvitationsApi(http: HttpClient) {
         })
       ).data
     },
-    async startMfa(token: string) {
-      return (
-        await http.request<Envelope<InvitationMfaChallenge>>('/invitations/mfa/start', {
-          method: 'POST',
-          authenticated: false,
-          body: { token },
-        })
-      ).data
-    },
     async accept(input: {
       token: string
       fullName?: string
       password?: string
       mfa?: MfaChoice
-      mfaChallengeToken?: string
-      mfaCode?: string
     }) {
       return (
         await http.request<Envelope<InvitationAcceptance>>('/invitations/accept', {

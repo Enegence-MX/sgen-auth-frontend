@@ -20,14 +20,6 @@ import type {
 
 type Step = 'password' | 'mfa' | 'done'
 
-function needsInvitationMfaCode(details: InvitationDetails, choice: MfaChoice) {
-  return !details.hasMfa && (details.mfaRequired || choice === 'ENABLE')
-}
-
-function isInvitationMfaCodeReady(challengeToken: string, code: string) {
-  return Boolean(challengeToken) && code.length === 6
-}
-
 function validateInvitationPassword(
   name: string,
   password: string,
@@ -48,66 +40,6 @@ function validateInvitationPassword(
   return undefined
 }
 
-interface InvitationMfaCodeProps {
-  visible: boolean
-  challengeToken: string
-  code: string
-  sending: boolean
-  error: unknown
-  sendLabel: string
-  sendingLabel: string
-  sentMessage: string
-  codeLabel: string
-  resendLabel: string
-  onSend: () => void
-  onCodeChange: (value: string) => void
-}
-
-function InvitationMfaCode({
-  visible,
-  challengeToken,
-  code,
-  sending,
-  error,
-  sendLabel,
-  sendingLabel,
-  sentMessage,
-  codeLabel,
-  resendLabel,
-  onSend,
-  onCodeChange,
-}: Readonly<InvitationMfaCodeProps>) {
-  if (!visible) return null
-  return (
-    <div className="grid min-w-0 grid-cols-1 gap-3">
-      {!challengeToken ? (
-        <Button type="button" variant="secondary" loading={sending} onClick={onSend}>
-          {sending ? sendingLabel : sendLabel}
-        </Button>
-      ) : (
-        <>
-          <Notice>{sentMessage}</Notice>
-          <div><TextField
-            label={codeLabel}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9]{6}"
-            minLength={6}
-            maxLength={6}
-            required
-            value={code}
-            onChange={(event) => onCodeChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
-          /></div>
-          <Button type="button" variant="secondary" loading={sending} onClick={onSend}>
-            {resendLabel}
-          </Button>
-        </>
-      )}
-      {error !== undefined && <ErrorNotice error={error} />}
-    </div>
-  )
-}
-
 export function InvitationAcceptancePage() {
   const { t, i18n } = useTranslation()
   const { token = '' } = useParams()
@@ -125,11 +57,6 @@ export function InvitationAcceptancePage() {
   const [mfaChoice, setMfaChoice] = useState<MfaChoice>('ENABLE')
   const [formError, setFormError] = useState('')
   const [acceptanceError, setAcceptanceError] = useState<unknown>()
-  const [mfaStartError, setMfaStartError] = useState<unknown>()
-  const [mfaChallengeToken, setMfaChallengeToken] = useState('')
-  const [mfaSentTo, setMfaSentTo] = useState('')
-  const [mfaCode, setMfaCode] = useState('')
-  const [sendingMfaCode, setSendingMfaCode] = useState(false)
   const [accepting, setAccepting] = useState(false)
   const [accepted, setAccepted] = useState<InvitationAcceptance>()
 
@@ -140,11 +67,6 @@ export function InvitationAcceptancePage() {
   const currentStep = step ?? (invitation ? startStep(invitation) : undefined)
 
   async function accept(details: InvitationDetails, choice?: MfaChoice) {
-    const requiresNewMfaVerification = needsInvitationMfaCode(details, choice ?? 'ENABLE')
-    if (requiresNewMfaVerification && !isInvitationMfaCodeReady(mfaChallengeToken, mfaCode)) {
-      setAcceptanceError(t('invitation.mfaCodeRequired'))
-      return
-    }
     setAccepting(true)
     setAcceptanceError(undefined)
     try {
@@ -152,7 +74,6 @@ export function InvitationAcceptancePage() {
         token,
         ...(!details.hasAccount ? { fullName: fullName.trim(), password } : {}),
         ...(choice ? { mfa: choice } : {}),
-        ...(requiresNewMfaVerification ? { mfaChallengeToken, mfaCode } : {}),
       })
       setAccepted(result)
       setPassword('')
@@ -162,22 +83,6 @@ export function InvitationAcceptancePage() {
       setAcceptanceError(error)
     } finally {
       setAccepting(false)
-    }
-  }
-
-  async function sendMfaCode() {
-    setSendingMfaCode(true)
-    setMfaStartError(undefined)
-    setAcceptanceError(undefined)
-    try {
-      const challenge = await invitations.startMfa(token)
-      setMfaChallengeToken(challenge.challengeToken)
-      setMfaSentTo(challenge.sentTo)
-      setMfaCode('')
-    } catch (error) {
-      setMfaStartError(error)
-    } finally {
-      setSendingMfaCode(false)
     }
   }
 
@@ -396,23 +301,6 @@ export function InvitationAcceptancePage() {
                   </fieldset>
                 )}
 
-                <InvitationMfaCode
-                  visible={needsInvitationMfaCode(invitation, mfaChoice)}
-                  challengeToken={mfaChallengeToken}
-                  code={mfaCode}
-                  sending={sendingMfaCode}
-                  error={mfaStartError}
-                  sendLabel={t('invitation.sendCode')}
-                  sendingLabel={t('invitation.sendingCode')}
-                  sentMessage={t('invitation.codeSent', { email: mfaSentTo })}
-                  codeLabel={t('invitation.enterCode')}
-                  resendLabel={t('invitation.resendCode')}
-                  onSend={() => void sendMfaCode()}
-                  onCodeChange={(value) => {
-                    setMfaCode(value)
-                    setAcceptanceError(undefined)
-                  }}
-                />
                 {acceptanceError !== undefined && <ErrorNotice error={acceptanceError} />}
                 {!invitation.hasAccount && currentStep === 'mfa' && (
                   <Button
@@ -429,7 +317,6 @@ export function InvitationAcceptancePage() {
                 <Button
                   type="submit"
                   loading={accepting}
-                  disabled={mfaChoice === 'ENABLE' && !invitation.hasMfa && !mfaChallengeToken}
                 >
                   {mfaSubmitLabel}
                 </Button>
@@ -482,14 +369,6 @@ export function InvitationAcceptancePage() {
                     ? '—'
                     : t('invitation.passwordDays', {
                         count: invitation.passwordExpiryDays,
-                      })}
-                </dd>
-                <dt>{t('securityConsole.passwordHistory')}</dt>
-                <dd className="m-0 break-words text-right font-semibold text-ink">
-                  {invitation.passwordHistoryCount === undefined
-                    ? '—'
-                    : t('invitation.passwordHistoryCount', {
-                        count: invitation.passwordHistoryCount,
                       })}
                 </dd>
                 <dt>{t('securityConsole.mfa')}</dt>

@@ -10,18 +10,9 @@ export interface InvitationDetails {
   mfaRequired: boolean
   passwordMinLength: number
   passwordExpiryDays?: number
-  passwordHistoryCount?: number
   mfaAllowedMethods?: string[]
   authMode?: 'LOCAL' | 'HYBRID' | 'FEDERATED'
   mfaWaiver: { version: string; text: string } | null
-}
-
-export interface InvitationMfaChallenge {
-  mfaRequired: true
-  method: 'EMAIL'
-  challengeToken: string
-  sentTo: string
-  expiresAt: string
 }
 
 export interface InvitationAcceptance {

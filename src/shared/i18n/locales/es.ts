@@ -102,7 +102,7 @@ export const es = {
     mfaRequired:
       'Tu organización exige activar la verificación en dos pasos antes de aceptar la invitación.',
     mfaSetupHint:
-      'Verifica ahora tu correo con un código para activar la verificación en dos pasos.',
+      'Activa la verificación en dos pasos para recibir un código por correo al iniciar sesión.',
     mfaChoice: 'Elige si quieres activar la verificación en dos pasos',
     mfaEnable: 'Activar la verificación en dos pasos',
     mfaWaive: 'Aceptar la opción disponible de la organización para omitir MFA',
@@ -110,14 +110,7 @@ export const es = {
     mfaMethod: 'Método de verificación',
     emailMethod: 'Código por correo',
     emailMethodHint:
-      'Se enviará un código a la dirección de esta invitación para confirmar la activación.',
-    sendCode: 'Enviar código de activación',
-    sendingCode: 'Enviando código…',
-    codeSent: 'Enviamos un código a {{email}}. Ingrésalo para activar la verificación.',
-    enterCode: 'Código de verificación',
-    resendCode: 'Reenviar código',
-    mfaCodeRequired:
-      'Solicita e ingresa el código enviado a tu correo para activar la verificación.',
+      'Recibirás un código en este correo cada vez que inicies sesión.',
     authenticatorApp: 'Aplicación autenticadora',
     authenticatorAppComingSoon: 'Próximamente',
     activateAndAccept: 'Activar verificación y aceptar',
@@ -128,7 +121,7 @@ export const es = {
     accepting: 'Aceptando…',
     success: 'Aceptaste la invitación.',
     successMfa:
-      'La verificación en dos pasos por correo está activada. El código de activación fue confirmado y se solicitará uno nuevo al iniciar sesión.',
+      'La verificación en dos pasos por correo está activada. Al iniciar sesión recibirás un código para confirmar tu acceso.',
     successNoMfa: 'Ya puedes iniciar sesión con tu cuenta de SGEn.',
     accountActivated: 'Cuenta activada',
     organizationPolicy: 'Política de la organización',
