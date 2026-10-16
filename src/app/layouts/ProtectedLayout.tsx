@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { NavLink, Navigate, Outlet, useNavigate } from 'react-router'
+import { NavLink, Navigate, Outlet, useNavigate, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Building2, ChevronRight, Menu, Palette, PanelLeftClose, PanelLeftOpen, ShieldCheck, X } from 'lucide-react'
 import { useServices, useSession } from '../services/services-context'
@@ -10,6 +10,8 @@ import { Spinner } from '../../shared/ui/Loading'
 import { UserMenu } from '../../shared/ui/UserMenu'
 import type { SessionState } from '../../features/auth/model/session-store'
 import { OverlayProvider } from '../../shared/ui/OverlayProvider'
+import { Notice } from '../../shared/ui/Notice'
+import { LinkButton } from '../../shared/ui/LinkButton'
 
 const headerControl = 'inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-control border border-solid border-white/15 bg-white/5 text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none'
 
@@ -31,11 +33,22 @@ function useSessionPreferences() {
 }
 
 export function ProtectedLayout() {
-  const { t } = useTranslation()
-  useSessionPreferences()
   const { auth } = useServices()
   const state = useSession()
+  const location = useLocation()
+  useSessionPreferences()
+
+  if (state.status !== 'authenticated') return <SessionFallback state={state} onRetry={() => { void auth.restore() }} />
+  if (state.session.password?.changeRequired && location.pathname !== '/password') return <Navigate to="/password" replace />
+
+  return <AuthenticatedLayout session={state.session} />
+}
+
+function AuthenticatedLayout({ session }: Readonly<{ session: Extract<SessionState, { status: 'authenticated' }>['session'] }>) {
+  const { t } = useTranslation()
+  const { auth } = useServices()
   const navigate = useNavigate()
+  const location = useLocation()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>()
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -66,9 +79,6 @@ export function ProtectedLayout() {
     }
   }
 
-  if (state.status !== 'authenticated') return <SessionFallback state={state} onRetry={() => { void auth.restore() }} />
-
-  const { session } = state
   const platform = session.context.accessMode === 'PLATFORM_SUPERADMIN'
   const modeLabel = t(platform ? 'auth.platform' : 'auth.tenant')
   const links = [
@@ -124,6 +134,12 @@ export function ProtectedLayout() {
           </aside>
           <main id="app-main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1400px] scroll-mt-24 px-5 py-8 focus:outline-none sm:px-8 sm:py-10 xl:px-12" key={`${session.context.accessMode}:${session.context.organization?.id ?? ''}`}>
             {error !== undefined && <div className="mb-6"><ErrorNotice error={error} /></div>}
+            {session.password?.expiresSoon && !session.password.changeRequired && location.pathname !== '/password' && (
+              <Notice variant="warning" className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <span>{t(session.password.daysRemaining === 0 ? 'password.expiresToday' : 'password.expiresSoon', { count: session.password.daysRemaining ?? 0 })}</span>
+                <LinkButton to="/password" variant="secondary">{t('password.title')}</LinkButton>
+              </Notice>
+            )}
             <Outlet context={{ supportOpen, setSupportOpen }} />
           </main>
         </div>

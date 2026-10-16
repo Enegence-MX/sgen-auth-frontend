@@ -1,7 +1,9 @@
+import { passwordEs } from './password'
 import { auditEs } from './audit'
 import type { TranslationCatalog } from './en'
 import { styleguideEs } from './styleguide'
 export const es = {
+  password: passwordEs,
   audit: auditEs,
   styleguide: styleguideEs,
   app: {
@@ -29,6 +31,7 @@ export const es = {
     reference: 'Referencia: {{id}}',
   },
   modules: {
+    password: 'Cambiar contraseña',
     styleguide: 'Guía de estilos',
     login: 'Inicio de sesión',
     organizations: 'Organizaciones',
@@ -95,7 +98,7 @@ export const es = {
     nameRequired: 'Ingresa tu nombre completo.',
     password: 'Crea una contraseña',
     confirmPassword: 'Confirma la contraseña',
-    passwordHint: 'Usa al menos {{count}} caracteres, como requiere tu organización.',
+    passwordHint: 'Usa entre {{count}} y 128 caracteres Unicode. Puedes incluir espacios y frases.',
     passwordMismatch: 'Las contraseñas no coinciden.',
     continue: 'Continuar',
     mfaHeading: 'Verificación en dos pasos',
@@ -198,7 +201,7 @@ export const es = {
     localPasswords: 'Contraseñas locales',
     minimumLength: 'Longitud mínima',
     characters: 'caracteres',
-    recommendedLength: 'Se recomiendan 14 caracteres o más.',
+    recommendedLength: 'Usa al menos 15 caracteres Unicode.',
     meetsRecommendation: 'Cumple la recomendación.',
     passwordExpiry: 'Vigencia de contraseña',
     days: 'días',
@@ -308,6 +311,12 @@ export const es = {
     readOnly: 'Las acciones disponibles dependen de tu organización actual y tus permisos.',
   },
   errors: {
+    passwordTooLong: 'La contraseña debe tener como máximo 128 caracteres Unicode.',
+    passwordCompromised: 'Esta contraseña es común o está comprometida. Elige una frase diferente.',
+    passwordReused: 'Elige una contraseña distinta de la actual y de las anteriores.',
+    currentPasswordInvalid: 'La contraseña actual no es correcta.',
+    passwordChangeBlocked: 'El cambio está bloqueado temporalmente. Espera antes de intentarlo de nuevo.',
+    passwordInvalidUnicode: 'La contraseña contiene un carácter Unicode inválido.',
     unknown: 'No se pudo completar la operación.',
     invalidCredentials: 'Credenciales inválidas o acceso no disponible.',
     sessionExpired: 'Tu sesión terminó. Inicia sesión de nuevo.',
@@ -315,7 +324,7 @@ export const es = {
     forbidden: 'No tienes permiso para realizar esta acción.',
     mfa: 'Esta cuenta requiere un segundo factor. Inicia sesión de nuevo e ingresa el código enviado por correo.',
     federated: 'Esta organización requiere acceso federado, que aún no está disponible.',
-    passwordChange: 'Debes actualizar tu contraseña. Ese flujo aún no está disponible.',
+    passwordChange: 'Actualiza tu contraseña para continuar.',
     notFound: 'Organización no encontrada o fuera de tu contexto actual.',
     duplicate: 'Ya existe una organización con este RFC.',
     policy: 'Un administrador debe revisar la política de seguridad de la organización.',
@@ -332,7 +341,7 @@ export const es = {
     invitationExpired:
       'La invitación venció. Solicita una nueva al administrador de tu organización.',
     invitationUsed: 'La invitación ya fue aceptada o revocada.',
-    passwordTooShort: 'La contraseña no cumple la longitud mínima de la organización.',
+    passwordTooShort: 'La contraseña no cumple la longitud mínima de tu cuenta.',
     mfaRequiredByOrganization: 'Tu organización exige la verificación en dos pasos.',
     mfaChoiceRequired: 'Elige si activar u omitir la verificación en dos pasos.',
   },

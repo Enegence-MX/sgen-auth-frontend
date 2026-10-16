@@ -1,7 +1,9 @@
+import { passwordEn } from './password'
 import { auditEn } from './audit'
 import { styleguideEn } from './styleguide'
 
 export const en = {
+  password: passwordEn,
   audit: auditEn,
   styleguide: styleguideEn,
   app: {
@@ -29,6 +31,7 @@ export const en = {
     reference: 'Reference: {{id}}',
   },
   modules: {
+    password: 'Change password',
     styleguide: 'Style guide',
     login: 'Sign in',
     organizations: 'Organizations',
@@ -92,7 +95,7 @@ export const en = {
     nameRequired: 'Enter your full name.',
     password: 'Create a password',
     confirmPassword: 'Confirm password',
-    passwordHint: 'Use at least {{count}} characters, as required by your organization.',
+    passwordHint: 'Use between {{count}} and 128 Unicode characters. Spaces and passphrases are allowed.',
     passwordMismatch: 'The passwords do not match.',
     continue: 'Continue',
     mfaHeading: 'Two-step verification',
@@ -301,6 +304,12 @@ export const en = {
     readOnly: 'Available actions depend on your current organization and permissions.',
   },
   errors: {
+    passwordTooLong: 'Your password must contain at most 128 Unicode characters.',
+    passwordCompromised: 'This password is common or compromised. Choose a different passphrase.',
+    passwordReused: 'Choose a password different from your current and previous passwords.',
+    currentPasswordInvalid: 'Your current password is incorrect.',
+    passwordChangeBlocked: 'Password changes are temporarily blocked. Wait before trying again.',
+    passwordInvalidUnicode: 'Your password contains an invalid Unicode character.',
     unknown: 'The operation could not be completed.',
     invalidCredentials: 'Invalid credentials or access unavailable.',
     sessionExpired: 'Your session has ended. Sign in again.',
@@ -308,7 +317,7 @@ export const en = {
     forbidden: 'You do not have permission to perform this action.',
     mfa: 'This account requires a second factor. Sign in again and enter the emailed verification code.',
     federated: 'This organization requires federated sign-in, which is not available yet.',
-    passwordChange: 'Your password must be updated. That flow is not available yet.',
+    passwordChange: 'Update your password to continue.',
     notFound: 'Organization not found or unavailable in your current context.',
     duplicate: 'An organization with this RFC already exists.',
     policy: 'The organization’s security policy needs to be reviewed by an administrator.',

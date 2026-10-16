@@ -258,25 +258,27 @@ export function SecurityConsolePage() {
               <div className={policyFieldClassName}>
                 <TextField
                   type="number"
-                  min={8}
+                  min={15}
                   max={128}
                   label={t('securityConsole.minimumLength')}
                   disabled={isPlatform}
-                  hint={policyValues.passwordMinLength < 14 ? t('securityConsole.recommendedLength') : t('securityConsole.meetsRecommendation')}
+                  hint={t('password.length', { min: 15, max: 128 })}
                   value={policyValues.passwordMinLength}
-                  onChange={(event) => updateNumber((value) => updatePolicy('passwordMinLength', value), event.target.value, 8, 128)}
+                  onChange={(event) => updateNumber((value) => updatePolicy('passwordMinLength', value), event.target.value, 15, 128)}
                 />
               </div>
               <div className={policyFieldClassName}>
                 <SelectField
                   label={t('securityConsole.passwordExpiry')}
-                  value={policyValues.passwordExpiryDays}
+                  value={policyValues.passwordExpiryDays ?? ''}
                   disabled={isPlatform}
-                  onChange={(event) => updatePolicy('passwordExpiryDays', Number(event.target.value))}
+                  onChange={(event) => updatePolicy('passwordExpiryDays', event.target.value === '' ? null : Number(event.target.value))}
                 >
+                  <option value="">{t('password.noExpiry')}</option>
                   {[30, 60, 90, 180, 365, 730].map((days) => <option key={days} value={days}>{days} {t('securityConsole.days')}</option>)}
                 </SelectField>
               </div>
+              <p className="m-0 text-sm leading-relaxed text-body">{t('password.expiryHint')}</p>
               <p className="m-0 rounded-control bg-subtle p-3 text-sm leading-relaxed text-body">
                 {t('securityConsole.policyAuditNote')}
               </p>
