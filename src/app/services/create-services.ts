@@ -1,3 +1,4 @@
+import { createAuditApi } from '../../features/audit/api/audit-api'
 import type { AppConfig } from '../../config/env'
 import { createAuthApi } from '../../features/auth/api/auth-api'
 import { SessionStore } from '../../features/auth/model/session-store'
@@ -12,6 +13,7 @@ export function createServices(config: AppConfig, fetcher: typeof fetch = fetch,
   http.onSessionExpired(auth.expire)
   return {
     auth,
+    audit: createAuditApi(http),
     organizations: createOrganizationsApi(http),
     invitations: createInvitationsApi(http),
   }

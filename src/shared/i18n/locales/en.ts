@@ -1,6 +1,8 @@
+import { auditEn } from './audit'
 import { styleguideEn } from './styleguide'
 
 export const en = {
+  audit: auditEn,
   styleguide: styleguideEn,
   app: {
     skipContent: 'Skip to content',
