@@ -12,6 +12,7 @@ import { Card } from '../../shared/ui/Card'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { Notice } from '../../shared/ui/Notice'
 import { TextField } from '../../shared/ui/TextField'
+import { passwordLength } from '../../features/passwords/model/password-policy'
 import type {
   InvitationAcceptance,
   InvitationDetails,
@@ -29,13 +30,15 @@ function validateInvitationPassword(
   | { key: 'invitation.nameRequired' }
   | { key: 'invitation.passwordHint'; options: { count: number } }
   | { key: 'invitation.passwordMismatch' }
+  | { key: 'errors.passwordTooLong' }
   | undefined {
   if (!name.trim()) return { key: 'invitation.nameRequired' }
-  if (password.length < minimumLength)
+  if (passwordLength(password) < minimumLength)
     return {
       key: 'invitation.passwordHint',
       options: { count: minimumLength },
     }
+  if (passwordLength(password) > 128) return { key: 'errors.passwordTooLong' }
   if (password !== confirmation) return { key: 'invitation.passwordMismatch' }
   return undefined
 }
@@ -225,8 +228,6 @@ export function InvitationAcceptancePage() {
                   label={t('invitation.password')}
                   type="password"
                   autoComplete="new-password"
-                  minLength={invitation.passwordMinLength}
-                  maxLength={128}
                   hint={t('invitation.passwordHint', {
                     count: invitation.passwordMinLength,
                   })}
@@ -241,7 +242,6 @@ export function InvitationAcceptancePage() {
                   label={t('invitation.confirmPassword')}
                   type="password"
                   autoComplete="new-password"
-                  maxLength={128}
                   required
                   value={passwordConfirmation}
                   onChange={(event) => {
@@ -365,12 +365,14 @@ export function InvitationAcceptancePage() {
                 </dd>
                 <dt>{t('securityConsole.passwordExpiry')}</dt>
                 <dd className="m-0 break-words text-right font-semibold text-ink">
-                  {invitation.passwordExpiryDays === undefined
+                  {invitation.passwordExpiryDays === null ? t('password.noExpiry') : invitation.passwordExpiryDays === undefined
                     ? '—'
                     : t('invitation.passwordDays', {
                         count: invitation.passwordExpiryDays,
                       })}
                 </dd>
+                <dt>{t('securityConsole.passwordHistory')}</dt>
+                <dd className="m-0 text-right font-semibold text-ink">{t('invitation.passwordHistoryCount', { count: invitation.passwordHistoryCount ?? 5 })}</dd>
                 <dt>{t('securityConsole.mfa')}</dt>
                 <dd className="m-0 break-words text-right font-semibold text-ink">
                   {invitation.mfaRequired ? t('invitation.required') : t('invitation.optional')}

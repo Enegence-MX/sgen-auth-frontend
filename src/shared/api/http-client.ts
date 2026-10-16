@@ -3,7 +3,7 @@ import { isRecord } from './response'
 import { browserSessionLock, type SessionLock } from './session-lock'
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH'
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT'
   body?: unknown
   authenticated?: boolean
   signal?: AbortSignal
@@ -12,6 +12,7 @@ export interface HttpClient {
   request<T>(path: string, options?: RequestOptions): Promise<T>
   refresh(force?: boolean): Promise<void>
   onSessionExpired(handler: () => void): void
+  onPasswordChangeRequired(handler: () => void): void
 }
 
 export function createHttpClient(
@@ -21,6 +22,7 @@ export function createHttpClient(
 ): HttpClient {
   let refreshing: Promise<void> | undefined
   let expired = () => {}
+  let passwordChangeRequired = () => {}
 
   async function send<T>(path: string, options: RequestOptions = {}, csrf?: string): Promise<T> {
     const response = await fetcher(`${baseUrl}${path}`, {
@@ -34,7 +36,11 @@ export function createHttpClient(
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     })
     const body: unknown = await response.json()
-    if (!response.ok) throw responseError(response.status, body)
+    if (!response.ok) {
+      const error = responseError(response.status, body)
+      if (error.code === 'PASSWORD_CHANGE_REQUIRED') passwordChangeRequired()
+      throw error
+    }
     if (!isRecord(body) || !('data' in body)) throw new ApiError(502, 'INVALID_RESPONSE')
     return body as T
   }
@@ -47,7 +53,7 @@ export function createHttpClient(
   }
 
   const invoke = <T>(path: string, options: RequestOptions) =>
-    options.method === 'POST' || options.method === 'PATCH' ? lock(() => mutation<T>(path, options)) : send<T>(path, options)
+    options.method && options.method !== 'GET' ? lock(() => mutation<T>(path, options)) : send<T>(path, options)
 
   async function renew(force: boolean): Promise<void> {
     await lock(async () => {
@@ -81,6 +87,7 @@ export function createHttpClient(
     onSessionExpired(handler) {
       expired = handler
     },
+    onPasswordChangeRequired(handler) { passwordChangeRequired = handler },
     async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
       try {
         return await invoke<T>(path, options)

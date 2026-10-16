@@ -1,5 +1,6 @@
 import { ApiError } from '../../../shared/api/errors'
 import { isRecord } from '../../../shared/api/response'
+import type { PasswordState } from '../../passwords/model/password-policy'
 
 export interface Identity {
   id: string
@@ -15,6 +16,7 @@ export interface SessionContext {
   organization: { id: string; legalName: string } | null
 }
 export interface Session {
+  password?: PasswordState
   identity: Identity
   context: SessionContext
   permissions: { module: string; code: string }[]
