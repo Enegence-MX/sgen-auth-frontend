@@ -52,7 +52,6 @@ const defaultPolicy = (organizationId: string): SecurityPolicy => ({
   mfaAllowedMethods: ['EMAIL_OTP'],
   passwordMinLength: 12,
   passwordExpiryDays: 90,
-  passwordHistoryCount: 5,
   sessionMaxHours: 12,
   idleTimeoutMinutes: 15,
   maxConcurrentSessions: 3,
@@ -99,7 +98,7 @@ export function fixture(
   const policies = new Map(rows.map((row) => [row.id, defaultPolicy(row.id)]))
   const invitationDetails: InvitationDetails = {
     legalName: 'Development Alpha',
-    email: 'invitee@example.test',
+    email: 'mariana.torres@energia-bajio.test',
     expiresAt: '2026-10-30T12:00:00.000Z',
     status: 'PENDING',
     hasAccount: false,
@@ -107,8 +106,7 @@ export function fixture(
     mfaRequired: false,
     passwordMinLength: 12,
     passwordExpiryDays: 90,
-    passwordHistoryCount: 5,
-    mfaAllowedMethods: ['EMAIL'],
+      mfaAllowedMethods: ['EMAIL'],
     authMode: 'LOCAL',
     mfaWaiver: { version: '1.0', text: 'Acepto omitir MFA para esta cuenta.' },
     ...options.invitation,
@@ -146,18 +144,9 @@ export function fixture(
     body: Record<string, unknown>,
   ): Response | undefined {
     if (path.endsWith('/invitations/lookup')) return json({ data: invitationDetails })
-    if (path.endsWith('/invitations/mfa/start')) {
-      return json({
-        data: {
-          mfaRequired: true,
-          method: 'EMAIL',
-          challengeToken: 'test_invitation_mfa_token_123456789',
-          sentTo: 'i******e@example.test',
-          expiresAt: '2026-10-30T12:10:00.000Z',
-        },
-      })
-    }
+    if (path.endsWith('/invitations/mfa/start')) return denied('NOT_FOUND', 404)
     if (!path.endsWith('/invitations/accept')) return undefined
+    if ('mfaCode' in body || 'mfaChallengeToken' in body) return denied('VALIDATION_FAILED', 400)
     return json({
       data: {
         email: invitationDetails.email,

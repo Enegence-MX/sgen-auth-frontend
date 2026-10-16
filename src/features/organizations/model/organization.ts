@@ -20,7 +20,6 @@ export interface SecurityPolicy {
   mfaAllowedMethods: string[]
   passwordMinLength: number
   passwordExpiryDays: number
-  passwordHistoryCount: number
   sessionMaxHours: number
   idleTimeoutMinutes: number
   maxConcurrentSessions: number
@@ -31,7 +30,7 @@ export interface SecurityPolicy {
   invitationExpiryHours: number
   updatedAt: string
 }
-export type SecurityPolicyChanges = Omit<SecurityPolicy, 'organizationId' | 'mfaAllowedMethods' | 'passwordHistoryCount' | 'updatedAt'>
+export type SecurityPolicyChanges = Omit<SecurityPolicy, 'organizationId' | 'mfaAllowedMethods' | 'updatedAt'>
 export interface OrganizationList {
   data: Organization[]
   meta: { page: number; limit: number; total: number }

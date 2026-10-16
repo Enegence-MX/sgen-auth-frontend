@@ -76,7 +76,6 @@ export function SecurityConsolePage() {
     organizationId: string
     changes: Partial<SecurityPolicyChanges>
   }>()
-  const [passwordHistoryPreview, setPasswordHistoryPreview] = useState<Record<string, number>>({})
   const [savedPolicy, setSavedPolicy] = useState<{ organizationId: string; value: SecurityPolicy }>()
   const [saved, setSaved] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -99,10 +98,6 @@ export function SecurityConsolePage() {
   const policyBase = savedPolicy?.organizationId === tenantKey ? savedPolicy.value : policy
   const draft = policyDraft?.organizationId === tenantKey ? policyDraft.changes : {}
   const policyValues = policyBase ? { ...policyBase, ...draft } : undefined
-  const displayedPasswordHistory = policyBase
-    ? passwordHistoryPreview[tenantKey] ?? policyValues?.passwordHistoryCount ?? policyBase.passwordHistoryCount
-    : 0
-
   if (session.status !== 'authenticated') return null
 
   const canInvite = isPlatform || session.session.permissions.some((permission) => permission.code === 'MANAGE_USERS')
@@ -281,23 +276,6 @@ export function SecurityConsolePage() {
                 >
                   {[30, 60, 90, 180, 365, 730].map((days) => <option key={days} value={days}>{days} {t('securityConsole.days')}</option>)}
                 </SelectField>
-              </div>
-              <div className={policyFieldClassName}>
-                <TextField
-                  type="number"
-                  min={0}
-                  max={24}
-                  step={1}
-                  label={t('securityConsole.passwordHistory')}
-                  disabled={isPlatform}
-                  value={displayedPasswordHistory}
-                  onChange={(event) => {
-                    const value = Number(event.target.value)
-                    if (Number.isInteger(value) && value >= 0 && value <= 24) {
-                      setPasswordHistoryPreview((current) => ({ ...current, [tenantKey]: value }))
-                    }
-                  }}
-                />
               </div>
               <p className="m-0 rounded-control bg-subtle p-3 text-sm leading-relaxed text-body">
                 {t('securityConsole.policyAuditNote')}
