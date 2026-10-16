@@ -1,6 +1,6 @@
 import { useState, type SubmitEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate } from 'react-router'
+import { Navigate, useLocation } from 'react-router'
 import { tenantChoices, type TenantChoice } from '../../features/auth/model/session'
 import type { MfaChallenge } from '../../features/auth/model/mfa-challenge'
 import { Spinner } from '../../shared/ui/Loading'
@@ -8,11 +8,13 @@ import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { useServices, useSession } from '../services/services-context'
 import { AuthStepContent } from './AuthStepContent'
 import styles from './AuthPage.module.css'
+import { Notice } from '../../shared/ui/Notice'
 
 export function AuthPage() {
   const { t } = useTranslation()
   const { auth } = useServices()
   const state = useSession()
+  const location = useLocation()
   const [credentials, setCredentials] = useState({ email: '', password: '' })
   const [choices, setChoices] = useState<TenantChoice[]>([])
   const [tenantId, setTenantId] = useState('')
@@ -100,6 +102,7 @@ export function AuthPage() {
   return (
     <main className={styles.panel}>
       <img src="/assets/logo-completo.png" alt="Enegence" className={styles.logo} onError={(e) => e.currentTarget.style.display = 'none'} />
+      {(location.state as { passwordChanged?: boolean } | null)?.passwordChanged && <Notice variant="success" role="status">{t('password.changed')}</Notice>}
       <form aria-label={t('auth.loginForm')} onSubmit={step === 'email' && choices.length === 0 ? (e) => { e.preventDefault(); handleContinueEmail(); } : submit} aria-busy={busy}>
         <fieldset disabled={busy}>
           <AuthStepContent

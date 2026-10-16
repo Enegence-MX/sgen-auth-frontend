@@ -9,6 +9,7 @@ import { NewOrganizationPage } from '../pages/NewOrganizationPage'
 import { OrganizationPage } from '../pages/OrganizationPage'
 import { SecurityConsolePage } from '../pages/SecurityConsolePage'
 import { SessionPage } from '../pages/SessionPage'
+import { PasswordPage } from '../pages/PasswordPage'
 import type { Services } from '../services/create-services'
 import type { RouteMetadata } from './route-metadata'
 
@@ -38,6 +39,7 @@ export function createAppRoutes(services: Services): RouteObject[] {
           element: <ProtectedLayout />,
           children: [
             { index: true, element: <Navigate to="/organizations" replace /> },
+            { path: 'password', element: <PasswordPage />, handle: { module: 'password' } satisfies RouteMetadata },
             {
               path: 'organizations',
               element: <OrganizationsPage />,
