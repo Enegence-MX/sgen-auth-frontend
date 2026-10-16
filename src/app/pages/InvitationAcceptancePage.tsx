@@ -347,72 +347,84 @@ export function InvitationAcceptancePage() {
           )}
         </section>
 
-        {invitation && (
-          <aside className="grid min-w-0 grid-cols-1 gap-4">
-            <Card>
-              <p className="m-0 text-xs font-bold tracking-widest text-brand uppercase">
-                {t('invitation.organizationPolicy')}
-              </p>
-              <h2 className="mt-3 mb-5 font-heading text-lg font-semibold text-ink">
-                {invitation.legalName}
-              </h2>
-              <dl className="m-0 grid grid-cols-2 gap-x-4 gap-y-3 text-sm text-body">
-                <dt>{t('securityConsole.minimumLength')}</dt>
-                <dd className="m-0 break-words text-right font-semibold text-ink">
-                  {t('invitation.passwordCharacters', {
-                    count: invitation.passwordMinLength,
-                  })}
-                </dd>
-                <dt>{t('securityConsole.passwordExpiry')}</dt>
-                <dd className="m-0 break-words text-right font-semibold text-ink">
-                  {invitation.passwordExpiryDays === null ? t('password.noExpiry') : invitation.passwordExpiryDays === undefined
-                    ? '—'
-                    : t('invitation.passwordDays', {
-                        count: invitation.passwordExpiryDays,
-                      })}
-                </dd>
-                <dt>{t('securityConsole.passwordHistory')}</dt>
-                <dd className="m-0 text-right font-semibold text-ink">{t('invitation.passwordHistoryCount', { count: invitation.passwordHistoryCount ?? 5 })}</dd>
-                <dt>{t('securityConsole.mfa')}</dt>
-                <dd className="m-0 break-words text-right font-semibold text-ink">
-                  {invitation.mfaRequired ? t('invitation.required') : t('invitation.optional')}
-                </dd>
-                <dt>{t('securityConsole.authenticationMode')}</dt>
-                <dd className="m-0 break-words text-right font-semibold text-ink">
-                  {invitation.authMode === undefined
-                    ? '—'
-                    : t(`securityConsole.authMode.${invitation.authMode}`)}
-                </dd>
-                <dt>{t('securityConsole.allowedMethods')}</dt>
-                <dd className="m-0 text-right font-semibold text-ink">
-                  {invitation.mfaAllowedMethods?.length
-                    ? invitation.mfaAllowedMethods
-                        .map((method) =>
-                          t(
-                            method === 'EMAIL' || method === 'EMAIL_OTP'
-                              ? 'securityConsole.emailMfa'
-                              : 'securityConsole.authenticatorApp',
-                          ),
-                        )
-                        .join(', ')
-                    : '—'}
-                </dd>
-              </dl>
-            </Card>
-            <Card>
-              <h2 className="m-0 mb-4 font-heading text-base font-semibold text-ink">
-                {t('invitation.invitationDetails')}
-              </h2>
-              <dl className="m-0 grid gap-3 text-sm sm:grid-cols-[max-content_minmax(0,1fr)]">
-                <dt className="font-semibold text-muted">{t('invitation.email')}</dt>
-                <dd className="m-0 break-all text-ink">{invitation.email}</dd>
-                <dt className="font-semibold text-muted">{t('invitation.expires')}</dt>
-                <dd className="m-0 text-ink">{expiryLabel}</dd>
-              </dl>
-            </Card>
-          </aside>
-        )}
+        {invitation && <InvitationSummary invitation={invitation} expiryLabel={expiryLabel} />}
       </main>
     </div>
+  )
+}
+
+function InvitationSummary({
+  invitation,
+  expiryLabel,
+}: Readonly<{ invitation: InvitationDetails; expiryLabel: string }>) {
+  const { t } = useTranslation()
+  let passwordExpiryLabel = '—'
+  if (invitation.passwordExpiryDays === null) passwordExpiryLabel = t('password.noExpiry')
+  else if (invitation.passwordExpiryDays !== undefined) {
+    passwordExpiryLabel = t('invitation.passwordDays', {
+      count: invitation.passwordExpiryDays,
+    })
+  }
+
+  return (
+    <aside className="grid min-w-0 grid-cols-1 gap-4">
+      <Card>
+        <p className="m-0 text-xs font-bold tracking-widest text-brand uppercase">
+          {t('invitation.organizationPolicy')}
+        </p>
+        <h2 className="mt-3 mb-5 font-heading text-lg font-semibold text-ink">
+          {invitation.legalName}
+        </h2>
+        <dl className="m-0 grid grid-cols-2 gap-x-4 gap-y-3 text-sm text-body">
+          <dt>{t('securityConsole.minimumLength')}</dt>
+          <dd className="m-0 break-words text-right font-semibold text-ink">
+            {t('invitation.passwordCharacters', { count: invitation.passwordMinLength })}
+          </dd>
+          <dt>{t('securityConsole.passwordExpiry')}</dt>
+          <dd className="m-0 break-words text-right font-semibold text-ink">{passwordExpiryLabel}</dd>
+          {invitation.passwordHistoryCount !== undefined && (
+            <>
+              <dt>{t('securityConsole.passwordHistory')}</dt>
+              <dd className="m-0 text-right font-semibold text-ink">
+                {t('invitation.passwordHistoryCount', { count: invitation.passwordHistoryCount })}
+              </dd>
+            </>
+          )}
+          <dt>{t('securityConsole.mfa')}</dt>
+          <dd className="m-0 break-words text-right font-semibold text-ink">
+            {invitation.mfaRequired ? t('invitation.required') : t('invitation.optional')}
+          </dd>
+          <dt>{t('securityConsole.authenticationMode')}</dt>
+          <dd className="m-0 break-words text-right font-semibold text-ink">
+            {invitation.authMode === undefined ? '—' : t(`securityConsole.authMode.${invitation.authMode}`)}
+          </dd>
+          <dt>{t('securityConsole.allowedMethods')}</dt>
+          <dd className="m-0 text-right font-semibold text-ink">
+            {invitation.mfaAllowedMethods?.length
+              ? invitation.mfaAllowedMethods
+                  .map((method) =>
+                    t(
+                      method === 'EMAIL' || method === 'EMAIL_OTP'
+                        ? 'securityConsole.emailMfa'
+                        : 'securityConsole.authenticatorApp',
+                    ),
+                  )
+                  .join(', ')
+              : '—'}
+          </dd>
+        </dl>
+      </Card>
+      <Card>
+        <h2 className="m-0 mb-4 font-heading text-base font-semibold text-ink">
+          {t('invitation.invitationDetails')}
+        </h2>
+        <dl className="m-0 grid gap-3 text-sm sm:grid-cols-[max-content_minmax(0,1fr)]">
+          <dt className="font-semibold text-muted">{t('invitation.email')}</dt>
+          <dd className="m-0 break-all text-ink">{invitation.email}</dd>
+          <dt className="font-semibold text-muted">{t('invitation.expires')}</dt>
+          <dd className="m-0 text-ink">{expiryLabel}</dd>
+        </dl>
+      </Card>
+    </aside>
   )
 }

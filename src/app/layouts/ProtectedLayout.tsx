@@ -33,10 +33,20 @@ function useSessionPreferences() {
 }
 
 export function ProtectedLayout() {
-  const { t } = useTranslation()
-  useSessionPreferences()
   const { auth } = useServices()
   const state = useSession()
+  const location = useLocation()
+  useSessionPreferences()
+
+  if (state.status !== 'authenticated') return <SessionFallback state={state} onRetry={() => { void auth.restore() }} />
+  if (state.session.password?.changeRequired && location.pathname !== '/password') return <Navigate to="/password" replace />
+
+  return <AuthenticatedLayout session={state.session} />
+}
+
+function AuthenticatedLayout({ session }: Readonly<{ session: Extract<SessionState, { status: 'authenticated' }>['session'] }>) {
+  const { t } = useTranslation()
+  const { auth } = useServices()
   const navigate = useNavigate()
   const location = useLocation()
   const [busy, setBusy] = useState(false)
@@ -69,10 +79,6 @@ export function ProtectedLayout() {
     }
   }
 
-  if (state.status !== 'authenticated') return <SessionFallback state={state} onRetry={() => { void auth.restore() }} />
-
-  const { session } = state
-  if (session.password?.changeRequired && location.pathname !== '/password') return <Navigate to="/password" replace />
   const platform = session.context.accessMode === 'PLATFORM_SUPERADMIN'
   const modeLabel = t(platform ? 'auth.platform' : 'auth.tenant')
   const links = [
