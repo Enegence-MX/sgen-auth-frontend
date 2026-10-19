@@ -25,6 +25,7 @@ const codes = {
   PASSWORD_TOO_SHORT: 'passwordTooShort',
   PASSWORD_TOO_LONG: 'passwordTooLong',
   PASSWORD_COMPROMISED: 'passwordCompromised',
+  PASSWORD_CHECK_UNAVAILABLE: 'passwordCheckUnavailable',
   PASSWORD_REUSED: 'passwordReused',
   CURRENT_PASSWORD_INVALID: 'currentPasswordInvalid',
   PASSWORD_CHANGE_BLOCKED: 'passwordChangeBlocked',

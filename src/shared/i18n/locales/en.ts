@@ -306,6 +306,7 @@ export const en = {
   errors: {
     passwordTooLong: 'Your password must contain at most 128 Unicode characters.',
     passwordCompromised: 'This password is common or compromised. Choose a different passphrase.',
+    passwordCheckUnavailable: 'We could not check your password right now. Please try again in a moment.',
     passwordReused: 'Choose a password different from your current and previous passwords.',
     currentPasswordInvalid: 'Your current password is incorrect.',
     passwordChangeBlocked: 'Password changes are temporarily blocked. Wait before trying again.',
