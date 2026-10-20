@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["vite/client", "node", "@testing-library/jest-dom"]
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "dev"]
 }
