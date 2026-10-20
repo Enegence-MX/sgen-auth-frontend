@@ -17,37 +17,55 @@ Frontend de SGEn conectado al backend NestJS actual: login, selección de organi
 - Tailwind CSS 4 mediante `@tailwindcss/vite`, CSS Modules e i18next (español/inglés)
 - Base UI para tooltips, modales, notificaciones y selectores con búsqueda
 
-## Environment Setup
+## Local setup
+
+The frontend is a separate project and runs as its own process, as in production. It needs the backend running first: follow the README of `sgen-auth-backend` (its `npm run dev` starts PostgreSQL, the API and Mailpit).
+
+### 1. Requirements
+
+Node.js 24 (`>=24.11 <25`, see `.nvmrc`).
+
+### 2. Configure
 
 ```bash
 cp .env.example .env
 ```
 
-`VITE_API_BASE_URL` apunta a `http://localhost:3000/api/v1`. Usar `localhost` en ambos servicios y autorizar el origen del frontend en `CORS_ORIGINS`.
+| Variable            | Default                        | Purpose                                                    |
+| ------------------- | ------------------------------ | ---------------------------------------------------------- |
+| `VITE_API_BASE_URL` | `http://localhost:3000/api/v1` | Backend API. Must match `PORT` in the backend `.env`       |
+| `FRONTEND_PORT`     | `5173`                         | Port of this frontend. If it is in use, Vite stops instead of choosing another one |
 
-## Installation
+The backend must accept this address: `CORS_ORIGINS` and `FRONTEND_URL` in `sgen-auth-backend/.env` must be `http://localhost:<FRONTEND_PORT>`. Use `localhost` in both projects, not `127.0.0.1`, so the session cookies work.
 
-Node.js 24:
+### 3. Install and start
 
 ```bash
 npm ci
-```
-
-## Running the application
-
-Desde la raíz del proyecto (`cd ..`), Docker levanta frontend, backend y PostgreSQL juntos:
-
-```bash
 npm run dev
-npm run dev:logs
-npm run dev:down
 ```
 
-Frontend: `http://localhost:5173` por defecto. El lanzador de la raíz conserva el puerto `FRONTEND_PORT` existente en `sgen-auth-backend/.env.development.local` al completar por primera vez el `.env` actual; para cambiarlo después, edita `FRONTEND_PORT` en `sgen-auth-backend/.env`.
+On start it checks the backend and prints one of these lines:
 
-Para ejecutar sólo Vite desde este repositorio: `npm run dev`. Para validar: `npm run check` (lint, tipos, pruebas y build).
+```text
+  ✓ Backend ready at http://localhost:3000/api/v1
+  ⚠ Backend not reachable at http://localhost:3000/api/v1/health. Start it with npm run dev in sgen-auth-backend, or check VITE_API_BASE_URL in .env.
+  ⚠ Backend at http://localhost:3000/api/v1 does not accept http://localhost:5180. Add it to CORS_ORIGINS and FRONTEND_URL in sgen-auth-backend/.env, or change FRONTEND_PORT here.
+```
 
-El esquema actual ya no carga automáticamente las cuentas de prueba del esquema anterior. Crea el primer superadministrador con `npm run platform:create-admin` desde la raíz y usa las credenciales que proporciones. Los datos previos permanecen en su volumen; el nuevo esquema usa un volumen independiente.
+A warning does not stop Vite: fix it and reload the page.
+
+### 4. Sign in
+
+Use the platform superadmin created with `npm run platform:create-admin` in the backend, or the sample accounts of `npm run seed:dev` (password: `DEV_SEED_PASSWORD` in the backend `.env`). Invitation and MFA emails arrive in Mailpit (`http://localhost:8025`).
+
+### Commands
+
+| Command         | Purpose                               |
+| --------------- | ------------------------------------- |
+| `npm run dev`   | Start Vite and check the backend      |
+| `npm run check` | Lint, types, tests and build          |
+| `npm run build` | Production build in `dist/`           |
 
 ## Organization
 
@@ -62,11 +80,11 @@ src/
 tests/             Regresiones de sesión, transporte, pantallas y traducciones
 ```
 
-`app` compone las funcionalidades; `shared` no depende de ellas. Los componentes reciben servicios desde el contexto y las pruebas inyectan `fetch`. Contrato y documentos locales: `../Docs/backend/`.
+`app` compone las funcionalidades; `shared` no depende de ellas. Los componentes reciben servicios desde el contexto y las pruebas inyectan `fetch`.
 
 ## Style guide
 
-Open `/styleguide` (locally, `http://localhost:5175/styleguide`) or use the **Guía de estilos** navigation entry. This independently loaded page needs no session, always uses Spanish and contains only sample data. Theme previews stay inside the guide and form examples do not call the API.
+Open `/styleguide` (locally, `http://localhost:5173/styleguide`) or use the **Guía de estilos** navigation entry. This independently loaded page needs no session, always uses Spanish and contains only sample data. Theme previews stay inside the guide and form examples do not call the API.
 
 The sidebar groups sections and follows the section visible while scrolling. Escape closes the mobile navigation. The mobile sidebar can be hidden and the desktop sidebar collapses to icons.
 
@@ -84,4 +102,3 @@ Theme controls stay at the bottom of the sidebar, including its collapsed state.
 - Existing page/layout CSS Modules remain available for gradual migration. Preflight is omitted to preserve the existing document defaults; the document base is in `@layer base` so utility classes can override it. Declare border styles explicitly, for example `border border-solid border-line`.
 - For responsive layouts, start with `grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3`. Test narrow screens as well as desktop.
 
-After changing dependencies, rebuild the Docker frontend from the workspace root: `docker compose --env-file sgen-auth-backend/.env.development.local up -d --build --no-deps frontend`.
