@@ -85,6 +85,7 @@ export function fixture(
     initial?: Session
     loginAs?: Session
     loginError?: string
+    passwordChangeError?: string
     shared?: boolean
     mfaLogin?: boolean
     invitation?: Partial<InvitationDetails>
@@ -180,6 +181,13 @@ export function fixture(
       201,
     )
   }
+  function passwordResponse(path: string, method: string | undefined): Response | undefined {
+    if (path.endsWith('/password/policy')) return json({ data: session?.password })
+    if (!path.endsWith('/password/change') || method !== 'PUT') return undefined
+    if (options.passwordChangeError) return denied(options.passwordChangeError, 422)
+    session = undefined
+    return json({ data: { success: true } })
+  }
   const fetcher = vi.fn<typeof fetch>(async (input, init) => {
     const url = new URL(String(input))
     const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {}
@@ -203,8 +211,9 @@ export function fixture(
       session = undefined
       return json({ data: { success: true } })
     }
-    const createdInvitation = createInvitationResponse(url.pathname, body, session)
-    if (createdInvitation) return createdInvitation
+    const featureResponse = passwordResponse(url.pathname, init?.method)
+      ?? createInvitationResponse(url.pathname, body, session)
+    if (featureResponse) return featureResponse
     return organizationResponse(rows, policies, session, url, init?.method, body)
   })
   const services = createServices(

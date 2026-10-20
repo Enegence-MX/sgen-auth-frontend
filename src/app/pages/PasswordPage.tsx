@@ -45,7 +45,8 @@ export function PasswordPage() {
       setNewPassword('')
       setConfirmation('')
       auth.passwordChanged()
-      await navigate('/login', { replace: true, state: { passwordChanged: true } })
+      // Commit navigation before the anonymous-session redirect can clear its state.
+      await navigate('/login', { replace: true, state: { passwordChanged: true }, flushSync: true })
     } catch (failure) {
       setError(failure)
     } finally { setBusy(false) }
