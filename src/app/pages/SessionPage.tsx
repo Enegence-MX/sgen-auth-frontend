@@ -10,6 +10,7 @@ import { Card } from '../../shared/ui/Card'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { ThemeSelector } from '../../shared/ui/ThemeSelector'
 import styles from './Workspace.module.css'
+import { LinkButton } from '../../shared/ui/LinkButton'
 
 export function SessionPage() {
   const { t } = useTranslation()
@@ -41,6 +42,10 @@ export function SessionPage() {
       } />
       {error !== undefined && <ErrorNotice error={error} />}
       {renewed && <Notice variant="success" role="status">{t('session.renewed')}</Notice>}
+      <Card className="flex flex-wrap items-center justify-between gap-4">
+        <div><h2 className="m-0 font-heading text-lg font-semibold text-ink">{t('password.title')}</h2><p className="mb-0 mt-2 text-sm">{t('password.description')}</p></div>
+        <LinkButton to="/password">{t('password.title')}</LinkButton>
+      </Card>
       <dl className={styles.details}>
         <div>
           <dt>{t('session.name')}</dt>

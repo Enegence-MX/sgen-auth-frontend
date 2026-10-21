@@ -30,6 +30,7 @@ import { Table } from '../../shared/ui/Table'
 import { Tabs } from '../../shared/ui/Tabs'
 import { TextField } from '../../shared/ui/TextField'
 import type { SecurityPolicy, SecurityPolicyChanges } from '../../features/organizations/model/organization'
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../features/passwords/model/password-policy'
 
 const policyFieldClassName = 'grid grid-cols-1 items-center gap-x-4 gap-y-2 [&>label]:mb-0 [&_input]:mb-0 [&_select]:mb-0 [&>p]:mb-0 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,0.65fr)] sm:[&>label]:col-start-1 sm:[&>label]:row-start-1 sm:[&>input]:col-start-2 sm:[&>input]:row-start-1 sm:[&>div]:col-start-2 sm:[&>div]:row-start-1 sm:[&>p]:col-span-2 sm:[&>p]:row-start-2'
 
@@ -258,25 +259,27 @@ export function SecurityConsolePage() {
               <div className={policyFieldClassName}>
                 <TextField
                   type="number"
-                  min={8}
-                  max={128}
+                  min={PASSWORD_MIN_LENGTH}
+                  max={PASSWORD_MAX_LENGTH}
                   label={t('securityConsole.minimumLength')}
                   disabled={isPlatform}
-                  hint={policyValues.passwordMinLength < 14 ? t('securityConsole.recommendedLength') : t('securityConsole.meetsRecommendation')}
+                  hint={t('password.length', { min: PASSWORD_MIN_LENGTH, max: PASSWORD_MAX_LENGTH })}
                   value={policyValues.passwordMinLength}
-                  onChange={(event) => updateNumber((value) => updatePolicy('passwordMinLength', value), event.target.value, 8, 128)}
+                  onChange={(event) => updateNumber((value) => updatePolicy('passwordMinLength', value), event.target.value, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)}
                 />
               </div>
               <div className={policyFieldClassName}>
                 <SelectField
                   label={t('securityConsole.passwordExpiry')}
-                  value={policyValues.passwordExpiryDays}
+                  value={policyValues.passwordExpiryDays ?? ''}
                   disabled={isPlatform}
-                  onChange={(event) => updatePolicy('passwordExpiryDays', Number(event.target.value))}
+                  onChange={(event) => updatePolicy('passwordExpiryDays', event.target.value === '' ? null : Number(event.target.value))}
                 >
+                  <option value="">{t('password.noExpiry')}</option>
                   {[30, 60, 90, 180, 365, 730].map((days) => <option key={days} value={days}>{days} {t('securityConsole.days')}</option>)}
                 </SelectField>
               </div>
+              <p className="m-0 text-sm leading-relaxed text-body">{t('password.expiryHint')}</p>
               <p className="m-0 rounded-control bg-subtle p-3 text-sm leading-relaxed text-body">
                 {t('securityConsole.policyAuditNote')}
               </p>

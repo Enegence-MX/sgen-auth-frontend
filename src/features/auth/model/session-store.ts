@@ -88,6 +88,10 @@ export class SessionStore {
     this.expire()
     this.broadcast()
   }
+  passwordChanged(): void {
+    this.expire()
+    this.broadcast()
+  }
   async refresh(): Promise<void> {
     await this.api.refresh()
     await this.restore()

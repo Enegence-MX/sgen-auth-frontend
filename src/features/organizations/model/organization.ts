@@ -19,7 +19,7 @@ export interface SecurityPolicy {
   mfaRequired: boolean
   mfaAllowedMethods: string[]
   passwordMinLength: number
-  passwordExpiryDays: number
+  passwordExpiryDays: number | null
   sessionMaxHours: number
   idleTimeoutMinutes: number
   maxConcurrentSessions: number

@@ -92,7 +92,7 @@ export function AuthStepContent({
             {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
           </Button>
         </div>
-        <Button type="submit" loading={busy} disabled={!credentials.password.trim()}>{busy ? t('auth.processing') : t('auth.loginButton')}</Button>
+        <Button type="submit" loading={busy} disabled={credentials.password.length === 0}>{busy ? t('auth.processing') : t('auth.loginButton')}</Button>
       </div>
     )
   }

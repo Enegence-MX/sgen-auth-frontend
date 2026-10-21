@@ -6,13 +6,16 @@ import { createOrganizationsApi } from '../../features/organizations/api/organiz
 import { createInvitationsApi } from '../../features/invitations/api/invitations-api'
 import { createHttpClient } from '../../shared/api/http-client'
 import type { SessionLock } from '../../shared/api/session-lock'
+import { createPasswordsApi } from '../../features/passwords/api/passwords-api'
 
 export function createServices(config: AppConfig, fetcher: typeof fetch = fetch, lock?: SessionLock) {
   const http = createHttpClient(config.apiBaseUrl, fetcher, lock)
   const auth = new SessionStore(createAuthApi(http))
   http.onSessionExpired(auth.expire)
+  http.onPasswordChangeRequired(() => { void auth.restore() })
   return {
     auth,
+    passwords: createPasswordsApi(http),
     audit: createAuditApi(http),
     organizations: createOrganizationsApi(http),
     invitations: createInvitationsApi(http),
