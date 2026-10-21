@@ -57,7 +57,7 @@ message stored in the navigation state.
 These checks verify frontend behavior with simulated responses. Separate browser
 verification on 2026-10-21 exercised the real NestJS backend, PostgreSQL password
 history and session storage, and live HIBP requests. See the
-[browser and backend evidence](evidence/2026-10-21/README.md) for the procedure,
+[browser and backend evidence](evidence/2026-10-21-follow-up/README.md) for the procedure,
 results, screenshots and environment limits.
 
 ## Review notes
@@ -70,3 +70,6 @@ results, screenshots and environment limits.
   the running backend. Mobile coverage uses Chromium emulation, not a physical
   device. All four cases verified password history rejection, session revocation,
   sign-in with the new password and saved theme preferences.
+- The follow-up browser run also verified the restricted layout and working
+  sign-out while a password change is required. The earlier screenshots remain
+  available as a historical snapshot.
