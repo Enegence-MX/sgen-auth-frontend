@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-21",
+  "browser": "153.0.8010.12",
+  "backendRevision": "3c867625a1fbc1a8412481077742454e2e710287",
+  "backend": "Real NestJS API with temporary PostgreSQL 18 and live HIBP",
+  "mobile": "Chromium viewport emulation, not a physical device",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "requiredRedirect": true,
+      "mismatchRequests": 0,
+      "reusedStatus": 422,
+      "reusedCode": "PASSWORD_REUSED",
+      "successfulChangeStatus": 200,
+      "revokedSessions": 2,
+      "staleSessionStatus": 401,
+      "oldPasswordRejected": true,
+      "newPasswordAccepted": true,
+      "themePreferencePersisted": true,
+      "horizontalOverflow": false,
+      "browserErrors": 0,
+      "screenshots": [
+        "desktop-light-required.png",
+        "desktop-light-reused.png",
+        "desktop-light-success.png",
+        "desktop-light-signed-in.png"
+      ]
+    },
+    {
+      "name": "desktop-dark",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "requiredRedirect": true,
+      "mismatchRequests": 0,
+      "reusedStatus": 422,
+      "reusedCode": "PASSWORD_REUSED",
+      "successfulChangeStatus": 200,
+      "revokedSessions": 2,
+      "staleSessionStatus": 401,
+      "oldPasswordRejected": true,
+      "newPasswordAccepted": true,
+      "themePreferencePersisted": true,
+      "horizontalOverflow": false,
+      "browserErrors": 0,
+      "screenshots": [
+        "desktop-dark-required.png",
+        "desktop-dark-reused.png",
+        "desktop-dark-success.png",
+        "desktop-dark-signed-in.png"
+      ]
+    },
+    {
+      "name": "mobile-light",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "requiredRedirect": true,
+      "mismatchRequests": 0,
+      "reusedStatus": 422,
+      "reusedCode": "PASSWORD_REUSED",
+      "successfulChangeStatus": 200,
+      "revokedSessions": 2,
+      "staleSessionStatus": 401,
+      "oldPasswordRejected": true,
+      "newPasswordAccepted": true,
+      "themePreferencePersisted": true,
+      "horizontalOverflow": false,
+      "browserErrors": 0,
+      "screenshots": [
+        "mobile-light-required.png",
+        "mobile-light-reused.png",
+        "mobile-light-success.png",
+        "mobile-light-signed-in.png"
+      ]
+    },
+    {
+      "name": "mobile-dark",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "requiredRedirect": true,
+      "mismatchRequests": 0,
+      "reusedStatus": 422,
+      "reusedCode": "PASSWORD_REUSED",
+      "successfulChangeStatus": 200,
+      "revokedSessions": 2,
+      "staleSessionStatus": 401,
+      "oldPasswordRejected": true,
+      "newPasswordAccepted": true,
+      "themePreferencePersisted": true,
+      "horizontalOverflow": false,
+      "browserErrors": 0,
+      "screenshots": [
+        "mobile-dark-required.png",
+        "mobile-dark-reused.png",
+        "mobile-dark-success.png",
+        "mobile-dark-signed-in.png"
+      ]
+    }
+  ],
+  "hibp": {
+    "hibpRequests": 8,
+    "hibpStatuses": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200
+    ]
+  }
+}

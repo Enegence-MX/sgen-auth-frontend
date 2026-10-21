@@ -39,15 +39,19 @@ session triggers the protected-route redirect. The password page commits its
 login navigation synchronously so that redirect cannot discard the success
 message stored in the navigation state.
 
-These checks verify frontend behavior. They do not establish live backend session
-revocation, password history enforcement or HIBP availability. Those behaviors
-belong to the backend; backend PR #6 has been merged into `develop`.
+These checks verify frontend behavior with simulated responses. Separate browser
+verification on 2026-10-21 exercised the real NestJS backend, PostgreSQL password
+history and session storage, and live HIBP requests. See the
+[browser and backend evidence](evidence/2026-10-21/README.md) for the procedure,
+results, screenshots and environment limits.
 
 ## Review notes
 
-- English and Spanish `PASSWORD_CHECK_UNAVAILABLE` messages are included in commit
-  `dd91347`; the translation update is no longer pending.
+- English and Spanish `PASSWORD_CHECK_UNAVAILABLE` messages are included; the
+  translation update is no longer pending.
 - The branch includes the `develop` startup changes for `FRONTEND_PORT`, the
   backend/CORS check and `.npmrc`. Follow the current README for local startup.
-- Browser checks against the running backend, desktop/mobile screenshots and
-  light/dark theme verification are separate from the automated checks above.
+- Desktop and mobile viewport checks passed in both light and dark themes against
+  the running backend. Mobile coverage uses Chromium emulation, not a physical
+  device. All four cases verified password history rejection, session revocation,
+  sign-in with the new password and saved theme preferences.
