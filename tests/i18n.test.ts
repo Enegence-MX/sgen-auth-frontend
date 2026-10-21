@@ -58,6 +58,21 @@ describe('language configuration and catalogs', () => {
   })
 })
 
+describe('password policy plurals', () => {
+  it.each([
+    { locale: 'en', count: 1, character: '1 character', days: '1 day.', expiry: '1 day after', history: 'the previous password.' },
+    { locale: 'en', count: 2, character: '2 characters', days: '2 days.', expiry: '2 days after', history: 'the previous 2 passwords.' },
+    { locale: 'es', count: 1, character: '1 carácter', days: '1 día.', expiry: '1 día desde', history: 'ni la anterior.' },
+    { locale: 'es', count: 2, character: '2 caracteres', days: '2 días.', expiry: '2 días desde', history: 'ni las 2 anteriores.' },
+  ])('uses the correct $locale forms for count $count', ({ locale, count, character, days, expiry, history }) => {
+    const { t } = createI18n([locale])
+    expect(t('password.count', { count })).toBe(character)
+    expect(t('password.expiresSoon', { count })).toContain(days)
+    expect(t('password.expiry', { count })).toContain(expiry)
+    expect(t('password.history', { count })).toContain(history)
+  })
+})
+
 describe('localized backend errors', () => {
   it('translates current API codes without leaking internal messages', () => {
     expect(translateError(new ApiError(401, 'INVALID_CREDENTIALS'), createI18n(['es']).t)).toBe(

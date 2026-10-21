@@ -39,6 +39,52 @@ async function submitPassword(
 }
 
 describe('password change flows', () => {
+  it('hides unavailable navigation and settings during a required change while keeping sign-out available', async () => {
+    const user = userEvent.setup()
+    const session = tenantSession()
+    const setup = fixture({ initial: {
+      ...session,
+      identity: { ...session.identity, name: 'Lucía Navarro', language: 'en', theme: 'dark' },
+      password: passwordState,
+    } })
+    const { router } = render(setup.services, '/session')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/password'))
+    expect(await screen.findByLabelText('Current password')).toBeInTheDocument()
+    expect(document.documentElement).toHaveClass('dark')
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /navigation/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /User menu/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+    expect(setup.fetcher.mock.calls.some(([url]) => String(url).endsWith('/auth/me/settings'))).toBe(false)
+
+    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
+    expect(setup.fetcher.mock.calls.filter(([url]) => String(url).endsWith('/auth/logout'))).toHaveLength(1)
+    expect(setup.services.auth.getSnapshot().status).toBe('anonymous')
+  })
+
+  it('keeps normal navigation and settings available for an optional password change', async () => {
+    const user = userEvent.setup()
+    const session = tenantSession()
+    const setup = fixture({ initial: {
+      ...session,
+      identity: { ...session.identity, name: 'Lucía Navarro', language: 'es', theme: 'light' },
+      password: { ...passwordState, changeRequired: false },
+    } })
+    const { router } = render(setup.services, '/password')
+
+    await screen.findByLabelText('Contraseña actual')
+    expect(screen.getByRole('navigation')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Menú de usuario: Lucía Navarro' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Mi sesión' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/session'))
+    expect(await screen.findByLabelText('Tema')).toBeInTheDocument()
+    expect(screen.getByLabelText('Idioma')).toBeInTheDocument()
+  })
+
   it('redirects a session requiring a password change to /password', async () => {
     const setup = passwordFixture()
     const { router } = render(setup.services, '/organizations')

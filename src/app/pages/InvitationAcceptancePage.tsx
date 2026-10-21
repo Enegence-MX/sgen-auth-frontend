@@ -12,7 +12,7 @@ import { Card } from '../../shared/ui/Card'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { Notice } from '../../shared/ui/Notice'
 import { TextField } from '../../shared/ui/TextField'
-import { passwordLength } from '../../features/passwords/model/password-policy'
+import { PASSWORD_MAX_LENGTH, passwordLength } from '../../features/passwords/model/password-policy'
 import type {
   InvitationAcceptance,
   InvitationDetails,
@@ -28,7 +28,7 @@ function validateInvitationPassword(
   minimumLength: number,
 ):
   | { key: 'invitation.nameRequired' }
-  | { key: 'invitation.passwordHint'; options: { count: number } }
+  | { key: 'invitation.passwordHint'; options: { count: number; max: number } }
   | { key: 'invitation.passwordMismatch' }
   | { key: 'errors.passwordTooLong' }
   | undefined {
@@ -36,9 +36,9 @@ function validateInvitationPassword(
   if (passwordLength(password) < minimumLength)
     return {
       key: 'invitation.passwordHint',
-      options: { count: minimumLength },
+      options: { count: minimumLength, max: PASSWORD_MAX_LENGTH },
     }
-  if (passwordLength(password) > 128) return { key: 'errors.passwordTooLong' }
+  if (passwordLength(password) > PASSWORD_MAX_LENGTH) return { key: 'errors.passwordTooLong' }
   if (password !== confirmation) return { key: 'invitation.passwordMismatch' }
   return undefined
 }
@@ -230,6 +230,7 @@ export function InvitationAcceptancePage() {
                   autoComplete="new-password"
                   hint={t('invitation.passwordHint', {
                     count: invitation.passwordMinLength,
+                    max: PASSWORD_MAX_LENGTH,
                   })}
                   required
                   value={password}

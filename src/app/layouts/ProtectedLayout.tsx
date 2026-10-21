@@ -79,6 +79,10 @@ function AuthenticatedLayout({ session }: Readonly<{ session: Extract<SessionSta
     }
   }
 
+  if (session.password?.changeRequired) {
+    return <RequiredPasswordLayout busy={busy} error={error} onSignOut={() => { void logout() }} />
+  }
+
   const platform = session.context.accessMode === 'PLATFORM_SUPERADMIN'
   const modeLabel = t(platform ? 'auth.platform' : 'auth.tenant')
   const links = [
@@ -143,6 +147,30 @@ function AuthenticatedLayout({ session }: Readonly<{ session: Extract<SessionSta
             <Outlet context={{ supportOpen, setSupportOpen }} />
           </main>
         </div>
+      </OverlayProvider>
+    </div>
+  )
+}
+
+function RequiredPasswordLayout({ busy, error, onSignOut }: Readonly<{ busy: boolean; error: unknown; onSignOut: () => void }>) {
+  const { t } = useTranslation()
+  return (
+    <div className="min-h-dvh bg-canvas font-sans text-body">
+      <OverlayProvider>
+        <a href="#app-main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-control focus:bg-panel focus:p-4">{t('app.skipContent')}</a>
+        <header className="flex min-h-18 items-center justify-between gap-4 border-0 border-b border-solid border-line bg-panel px-5 py-3 sm:px-8">
+          <div className="flex items-center gap-3">
+            <img src="/assets/logo-simbolo.png" alt="" className="size-8 object-contain" />
+            <span className="font-heading text-xl font-semibold text-ink">{t('app.name')}</span>
+          </div>
+          <Button variant="secondary" loading={busy} onClick={onSignOut}>
+            {t(busy ? 'auth.signingOut' : 'auth.logout')}
+          </Button>
+        </header>
+        <main id="app-main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1200px] px-5 py-8 focus:outline-none sm:px-8 sm:py-10">
+          {error !== undefined && <div className="mb-6"><ErrorNotice error={error} /></div>}
+          <Outlet />
+        </main>
       </OverlayProvider>
     </div>
   )

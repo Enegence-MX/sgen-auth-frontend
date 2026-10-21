@@ -5,6 +5,12 @@ The frontend consumes the `PasswordState` returned by the backend. A session wit
 loads the effective policy from `GET /api/v1/password/policy` and sends password
 changes to `PUT /api/v1/password/change`.
 
+While a change is required, the page uses a restricted layout with only the
+password form and sign-out action. Navigation, the user menu and settings controls
+are unavailable because the backend password gate rejects those operations. Saved
+language and theme preferences still apply. An optional password change keeps the
+normal layout and settings access.
+
 ## Automated checks
 
 Run the full frontend gate with the Node.js version declared in `.nvmrc`:
@@ -33,6 +39,15 @@ with a simulated HTTP transport. They cover:
    the authenticated session on `/password`.
 4. A `PASSWORD_REUSED` response displays the translated error, preserves the
    session and entered values, and allows the user to retry.
+5. A required change hides navigation and settings, preserves saved preferences
+   and still allows signing out through the backend logout endpoint.
+6. An optional change retains navigation and access to the session settings page.
+
+The catalog tests also verify singular and plural password counts, history and
+expiration messages in English and Spanish. Shared `PASSWORD_MIN_LENGTH` and
+`PASSWORD_MAX_LENGTH` constants define the frontend constraints used by invitation
+acceptance and security settings. The password page continues to use the effective
+policy returned by the backend.
 
 The success regression also guards against a navigation race: clearing the local
 session triggers the protected-route redirect. The password page commits its
