@@ -39,7 +39,7 @@ export function OrganizationPage() {
       {item && (
         <>
           <PageHeader title={item.legalName} description={item.rfc} actions={
-            <Badge variant={item.active ? 'success' : 'warning'}>{t(item.active ? 'organizations.active' : 'organizations.inactive')}</Badge>
+            <Badge variant={item.active ? 'success' : 'warning'}>{t(item.active ? 'organizations.active' : 'organizations.suspended')}</Badge>
           } />
           {created && <Notice variant="success" role="status">{t('organizations.created')}</Notice>}
           <dl className={styles.details}>

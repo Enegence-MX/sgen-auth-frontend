@@ -409,5 +409,15 @@ describe('current backend flows', () => {
     expect(await screen.findByText('FEDERADO')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /SSO/ })).not.toBeInTheDocument()
   })
+  it('labels inactive organizations as suspended', async () => {
+    const setup = fixture({ initial: platform })
+    setup.rows[1]!.active = false
+    const { router } = render(setup.services, '/organizations')
+    expect(await screen.findByText('Suspendida')).toBeInTheDocument()
+    await act(async () => {
+      await router.navigate(`/organizations/${beta}`)
+    })
+    expect(await screen.findByText('Suspendida')).toBeInTheDocument()
+  })
 })
 

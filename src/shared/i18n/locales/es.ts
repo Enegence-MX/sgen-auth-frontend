@@ -152,7 +152,7 @@ export const es = {
     address: 'Domicilio fiscal',
     status: 'Estado',
     active: 'Activa',
-    inactive: 'Inactiva',
+    suspended: 'Suspendida',
     optional: 'Opcional',
     noData: 'Sin especificar',
     createHint: 'Registra la organización y su política de seguridad inicial.',

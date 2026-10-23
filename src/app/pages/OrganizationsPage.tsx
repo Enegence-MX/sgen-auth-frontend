@@ -80,7 +80,7 @@ function PlatformOrganizations() {
                   <td>{item.rfc}</td>
                   <td>
                     <Badge variant={item.active ? 'success' : 'warning'}>
-                      {t(item.active ? 'organizations.active' : 'organizations.inactive')}
+                      {t(item.active ? 'organizations.active' : 'organizations.suspended')}
                     </Badge>
                   </td>
                   <td>

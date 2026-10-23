@@ -147,7 +147,7 @@ export const en = {
     address: 'Fiscal address',
     status: 'Status',
     active: 'Active',
-    inactive: 'Inactive',
+    suspended: 'Suspended',
     optional: 'Optional',
     noData: 'Not specified',
     createHint: 'Register the organization and its initial security policy.',
