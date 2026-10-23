@@ -9,33 +9,7 @@ import type {
   SecurityPolicyChanges,
 } from '../model/organization'
 
-interface BackendOrganization {
-  id: string
-  legalName: string
-  rfc: string
-  industrySector: string | null
-  taxAddress: string | null
-  active: boolean
-  createdAt: string
-  updatedAt: string
-}
-interface BackendOrganizationPage {
-  data: BackendOrganization[]
-  meta: { page: number; pageSize: number; total: number }
-}
-
-function toOrganization(organization: BackendOrganization): Organization {
-  return {
-    id: organization.id,
-    razonSocial: organization.legalName,
-    rfcMaestro: organization.rfc,
-    sectorIndustrial: organization.industrySector,
-    domicilioFiscal: organization.taxAddress,
-    active: organization.active,
-    createdAt: organization.createdAt,
-    updatedAt: organization.updatedAt,
-  }
-}
+const MAX_PAGE_SIZE = 100
 
 export function createOrganizationsApi(http: HttpClient) {
   async function list(page: number, pageSize: number, search: string, signal?: AbortSignal) {
@@ -44,11 +18,7 @@ export function createOrganizationsApi(http: HttpClient) {
       pageSize: String(pageSize),
       ...(search ? { search } : {}),
     })
-    const result = await http.request<BackendOrganizationPage>(`/organizations?${query}`, { signal })
-    return {
-      data: result.data.map(toOrganization),
-      meta: { page: result.meta.page, limit: result.meta.pageSize, total: result.meta.total },
-    }
+    return http.request<OrganizationList>(`/organizations?${query}`, { signal })
   }
 
   return {
@@ -56,32 +26,26 @@ export function createOrganizationsApi(http: HttpClient) {
       return list(page, 10, search, signal)
     },
     async securityOrganizationOptions(signal?: AbortSignal) {
-      const result = await list(1, 100, '', signal)
-      return result.data.map(
+      const items: Organization[] = []
+      for (let page = 1; ; page++) {
+        const result = await list(page, MAX_PAGE_SIZE, '', signal)
+        items.push(...result.data)
+        if (!result.data.length || items.length >= result.meta.total) break
+      }
+      return items.map(
         (organization): SecurityOrganizationOption => ({
           id: organization.id,
-          name: organization.razonSocial,
+          name: organization.legalName,
         }),
       )
     },
     async detail(id: string, signal?: AbortSignal) {
-      const result = await http.request<Envelope<BackendOrganization>>(
-        `/organizations/${encodeURIComponent(id)}`,
-        { signal },
-      )
-      return toOrganization(result.data)
+      return (
+        await http.request<Envelope<Organization>>(`/organizations/${encodeURIComponent(id)}`, { signal })
+      ).data
     },
     async create(input: OrganizationInput) {
-      const result = await http.request<Envelope<BackendOrganization>>('/organizations', {
-        method: 'POST',
-        body: {
-          legalName: input.razonSocial,
-          rfc: input.rfcMaestro,
-          ...(input.sectorIndustrial ? { industrySector: input.sectorIndustrial } : {}),
-          ...(input.domicilioFiscal ? { taxAddress: input.domicilioFiscal } : {}),
-        },
-      })
-      return toOrganization(result.data)
+      return (await http.request<Envelope<Organization>>('/organizations', { method: 'POST', body: input })).data
     },
     async securityPolicy(id: string, signal?: AbortSignal) {
       return (

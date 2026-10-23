@@ -1,18 +1,18 @@
 export interface Organization {
   id: string
-  razonSocial: string
-  rfcMaestro: string
-  sectorIndustrial: string | null
-  domicilioFiscal: string | null
+  legalName: string
+  rfc: string
+  industrySector: string | null
+  taxAddress: string | null
   active: boolean
   createdAt: string
   updatedAt: string
 }
 export interface OrganizationInput {
-  razonSocial: string
-  rfcMaestro: string
-  sectorIndustrial?: string
-  domicilioFiscal?: string
+  legalName: string
+  rfc: string
+  industrySector?: string
+  taxAddress?: string
 }
 export interface SecurityPolicy {
   organizationId: string
@@ -33,7 +33,7 @@ export interface SecurityPolicy {
 export type SecurityPolicyChanges = Omit<SecurityPolicy, 'organizationId' | 'mfaAllowedMethods' | 'updatedAt'>
 export interface OrganizationList {
   data: Organization[]
-  meta: { page: number; limit: number; total: number }
+  meta: { page: number; pageSize: number; total: number }
 }
 export interface SecurityOrganizationOption {
   id: string

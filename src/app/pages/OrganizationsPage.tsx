@@ -34,7 +34,7 @@ function PlatformOrganizations() {
     [organizations, page, search],
   )
   const result = useResource(load)
-  const totalPages = Math.max(1, Math.ceil((result.value?.meta.total ?? 0) / 10))
+  const totalPages = Math.max(1, Math.ceil((result.value?.meta.total ?? 0) / (result.value?.meta.pageSize ?? 10)))
   function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     setPage(1)
@@ -74,8 +74,8 @@ function PlatformOrganizations() {
             <tbody>
               {result.value.data.map((item) => (
                 <tr key={item.id}>
-                  <td className="max-w-[450px] font-semibold text-ink [overflow-wrap:anywhere]">{item.razonSocial}</td>
-                  <td>{item.rfcMaestro}</td>
+                  <td className="max-w-[450px] font-semibold text-ink [overflow-wrap:anywhere]">{item.legalName}</td>
+                  <td>{item.rfc}</td>
                   <td>
                     <Badge variant={item.active ? 'success' : 'warning'}>
                       {t(item.active ? 'organizations.active' : 'organizations.inactive')}
@@ -84,7 +84,7 @@ function PlatformOrganizations() {
                   <td>
                     <Link
                       to={`/organizations/${item.id}`}
-                      aria-label={`${t('organizations.view')}: ${item.razonSocial}`}
+                      aria-label={`${t('organizations.view')}: ${item.legalName}`}
                     >
                       {t('organizations.view')}
                     </Link>

@@ -37,18 +37,18 @@ export function OrganizationPage() {
       )}
       {item && (
         <>
-          <PageHeader title={item.razonSocial} description={item.rfcMaestro} actions={
+          <PageHeader title={item.legalName} description={item.rfc} actions={
             <Badge variant={item.active ? 'success' : 'warning'}>{t(item.active ? 'organizations.active' : 'organizations.inactive')}</Badge>
           } />
           {created && <Notice variant="success" role="status">{t('organizations.created')}</Notice>}
           <dl className={styles.details}>
             <div>
               <dt>{t('organizations.sector')}</dt>
-              <dd>{item.sectorIndustrial || t('organizations.noData')}</dd>
+              <dd>{item.industrySector || t('organizations.noData')}</dd>
             </div>
             <div>
               <dt>{t('organizations.address')}</dt>
-              <dd>{item.domicilioFiscal || t('organizations.noData')}</dd>
+              <dd>{item.taxAddress || t('organizations.noData')}</dd>
             </div>
             <div>
               <dt>{t('organizations.createdAt')}</dt>

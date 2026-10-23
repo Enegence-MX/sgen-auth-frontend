@@ -18,10 +18,10 @@ export function NewOrganizationPage() {
   const state = useSession()
   const navigate = useNavigate()
   const [fields, setFields] = useState({
-    razonSocial: '',
-    rfcMaestro: '',
-    sectorIndustrial: '',
-    domicilioFiscal: '',
+    legalName: '',
+    rfc: '',
+    industrySector: '',
+    taxAddress: '',
   })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>()
@@ -34,10 +34,10 @@ export function NewOrganizationPage() {
     setError(undefined)
     try {
       const item = await organizations.create({
-        razonSocial: fields.razonSocial.trim(),
-        rfcMaestro: fields.rfcMaestro.trim().toUpperCase(),
-        ...(fields.sectorIndustrial.trim() ? { sectorIndustrial: fields.sectorIndustrial.trim() } : {}),
-        ...(fields.domicilioFiscal.trim() ? { domicilioFiscal: fields.domicilioFiscal.trim() } : {}),
+        legalName: fields.legalName.trim(),
+        rfc: fields.rfc.trim().toUpperCase(),
+        ...(fields.industrySector.trim() ? { industrySector: fields.industrySector.trim() } : {}),
+        ...(fields.taxAddress.trim() ? { taxAddress: fields.taxAddress.trim() } : {}),
       })
       await navigate(`/organizations/${item.id}`, { replace: true, state: { created: true } })
     } catch (failure) {
@@ -57,16 +57,16 @@ export function NewOrganizationPage() {
           <fieldset disabled={busy}>
             <TextField
               label={t('organizations.legalName')}
-              value={fields.razonSocial}
-              onChange={(event) => change('razonSocial', event.target.value)}
+              value={fields.legalName}
+              onChange={(event) => change('legalName', event.target.value)}
               required
               maxLength={255}
               autoComplete="organization"
             />
             <TextField
               label={t('organizations.taxId')}
-              value={fields.rfcMaestro}
-              onChange={(event) => change('rfcMaestro', event.target.value.toUpperCase())}
+              value={fields.rfc}
+              onChange={(event) => change('rfc', event.target.value.toUpperCase())}
               required
               minLength={12}
               maxLength={13}
@@ -74,15 +74,15 @@ export function NewOrganizationPage() {
             />
             <TextField
               label={`${t('organizations.sector')} (${t('organizations.optional')})`}
-              value={fields.sectorIndustrial}
-              onChange={(event) => change('sectorIndustrial', event.target.value)}
+              value={fields.industrySector}
+              onChange={(event) => change('industrySector', event.target.value)}
               maxLength={150}
             />
             <TextArea
               label={`${t('organizations.address')} (${t('organizations.optional')})`}
               id="fiscal-address"
-              value={fields.domicilioFiscal}
-              onChange={(event) => change('domicilioFiscal', event.target.value)}
+              value={fields.taxAddress}
+              onChange={(event) => change('taxAddress', event.target.value)}
               maxLength={4000}
               rows={3}
               autoComplete="street-address"

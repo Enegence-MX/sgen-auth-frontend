@@ -2,23 +2,12 @@ import { vi } from 'vitest'
 import { createServices } from '../src/app/services/create-services'
 import type { Session } from '../src/features/auth/model/session'
 import type { InvitationDetails } from '../src/features/invitations/model/invitation'
-import type { SecurityPolicy } from '../src/features/organizations/model/organization'
+import type { Organization, SecurityPolicy } from '../src/features/organizations/model/organization'
 import type { PasswordState } from '../src/features/passwords/model/password-policy'
 import type { SessionLock } from '../src/shared/api/session-lock'
 import { validator } from './support/contract-validator'
 
 export const contractViolations: string[] = []
-
-export interface ContractOrganization {
-  id: string
-  legalName: string
-  rfc: string
-  industrySector: string | null
-  taxAddress: string | null
-  active: boolean
-  createdAt: string
-  updatedAt: string
-}
 
 export const alpha = '00000000-0000-4000-8000-000000000011'
 export const beta = '00000000-0000-4000-8000-000000000012'
@@ -72,7 +61,7 @@ export function tenantSession(id = alpha): Session {
     ],
   }
 }
-export const organization = (id: string, name: string, rfc = 'AAA010101AA1'): ContractOrganization => ({
+export const organization = (id: string, name: string, rfc = 'AAA010101AA1'): Organization => ({
   id,
   legalName: name,
   rfc,
@@ -316,7 +305,7 @@ const hasPermission = (session: Session, code: string) =>
   session.permissions.some((permission) => permission.code === code)
 
 function organizationResponse(
-  rows: ContractOrganization[],
+  rows: Organization[],
   policies: Map<string, SecurityPolicy>,
   session: Session,
   url: URL,
@@ -352,7 +341,7 @@ function organizationResponse(
 }
 function updateOrganization(
   session: Session,
-  item: ContractOrganization | undefined,
+  item: Organization | undefined,
   allowed: boolean,
   body: Record<string, unknown>,
 ): Response {
@@ -375,7 +364,7 @@ function updateOrganization(
   return json({ data: item })
 }
 function statusResponse(
-  rows: ContractOrganization[],
+  rows: Organization[],
   session: Session,
   id: string | undefined,
   active: boolean,
@@ -414,7 +403,7 @@ function securityPolicyResponse(
   policies.set(id, updated)
   return json({ data: updated })
 }
-function createOrganization(rows: ContractOrganization[], body: Record<string, unknown>): Response {
+function createOrganization(rows: Organization[], body: Record<string, unknown>): Response {
   const rfc = typeof body.rfc === 'string' ? body.rfc : ''
   if (rows.some((row) => row.rfc === rfc)) return denied('DUPLICATE_RECORD', 409)
   const item = {
