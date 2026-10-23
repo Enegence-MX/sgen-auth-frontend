@@ -1,4 +1,4 @@
-import { ApiError } from '../../../shared/api/errors'
+import { ApiError, numericDetail } from '../../../shared/api/errors'
 import { isRecord } from '../../../shared/api/response'
 import type { PasswordState } from '../../passwords/model/password-policy'
 
@@ -38,6 +38,8 @@ export interface TenantChoice {
   tenantId: string
   legalName: string
 }
+
+export const mfaAttemptsLeft = (error: unknown) => numericDetail(error, 'INVALID_MFA_CODE', 'attemptsLeft')
 
 export function tenantChoices(error: unknown): TenantChoice[] {
   if (

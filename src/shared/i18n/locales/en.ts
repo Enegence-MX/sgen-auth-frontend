@@ -72,6 +72,8 @@ export const en = {
     continue: 'Continue',
     logout: 'Sign out',
     signingOut: 'Signing out…',
+    mfaAttemptsLeft_one: '{{count}} attempt left.',
+    mfaAttemptsLeft_other: '{{count}} attempts left.',
     platform: 'Platform administration',
     tenant: 'Organization access',
   },

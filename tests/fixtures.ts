@@ -297,7 +297,10 @@ export function fixture(
     fetcher,
     serialLock(),
   )
-  return { services, fetcher, rows, policies }
+  const setSession = (next: Session | undefined) => {
+    session = next
+  }
+  return { services, fetcher, rows, policies, setSession }
 }
 
 const isPlatform = (session: Session) => session.context.accessMode === 'PLATFORM_SUPERADMIN'

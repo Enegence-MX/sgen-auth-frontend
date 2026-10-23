@@ -74,6 +74,8 @@ export const es = {
     continue: 'Continuar',
     logout: 'Cerrar sesión',
     signingOut: 'Cerrando sesión…',
+    mfaAttemptsLeft_one: 'Te queda {{count}} intento.',
+    mfaAttemptsLeft_other: 'Te quedan {{count}} intentos.',
     platform: 'Administración de plataforma',
     tenant: 'Acceso de organización',
   },

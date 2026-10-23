@@ -1,7 +1,8 @@
 import { useState, type SubmitEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation } from 'react-router'
-import { tenantChoices, type TenantChoice } from '../../features/auth/model/session'
+import { mfaAttemptsLeft, tenantChoices, type TenantChoice } from '../../features/auth/model/session'
+import { hasCode } from '../../shared/api/errors'
 import type { MfaChallenge } from '../../features/auth/model/mfa-challenge'
 import { Spinner } from '../../shared/ui/Loading'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
@@ -44,6 +45,7 @@ export function AuthPage() {
         setMfaChallenge(undefined)
         setMfaCode('')
       } catch (failure) {
+        if (hasCode(failure, 'MFA_CHALLENGE_INVALID')) cancel()
         setError(failure)
       } finally {
         setBusy(false)
@@ -90,6 +92,7 @@ export function AuthPage() {
   }
 
   const actionLabel = choices.length ? t('auth.continue') : t('auth.loginButton')
+  const attemptsLeft = mfaAttemptsLeft(error)
 
   if (state.status === 'authenticated') return <Navigate to="/organizations" replace />
   if (state.status === 'loading')
@@ -126,7 +129,11 @@ export function AuthPage() {
           />
         </fieldset>
       </form>
-      {error !== undefined && <ErrorNotice error={error} />}
+      {error !== undefined && (
+        <ErrorNotice error={error}>
+          {attemptsLeft !== undefined && <p>{t('auth.mfaAttemptsLeft', { count: attemptsLeft })}</p>}
+        </ErrorNotice>
+      )}
       {state.status === 'error' && error === undefined && <ErrorNotice error={state.error} />}
     </main>
   )

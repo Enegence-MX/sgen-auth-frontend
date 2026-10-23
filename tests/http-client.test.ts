@@ -86,4 +86,49 @@ describe('cookie session transport', () => {
     ])
     expect(observed).toEqual(['1', '2'])
   })
+  it('asks for a new CSRF token and retries a mutation once after CSRF_INVALID', async () => {
+    let token = 0
+    const fetcher = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).endsWith('/auth/csrf')) return json({ data: { csrfToken: String(++token) } })
+      return token === 1 ? denied('CSRF_INVALID', 403) : json({ data: { success: true } })
+    })
+    const http = createHttpClient(base, fetcher, serialLock())
+    await expect(http.request('/auth/logout', { method: 'POST' })).resolves.toEqual({ data: { success: true } })
+    expect(fetcher.mock.calls.map(([url]) => String(url).replace(base, ''))).toEqual([
+      '/auth/csrf', '/auth/logout', '/auth/csrf', '/auth/logout',
+    ])
+  })
+  it('stops after one CSRF retry', async () => {
+    const fetcher = vi.fn<typeof fetch>(async (input) =>
+      String(input).endsWith('/auth/csrf') ? json({ data: { csrfToken: 'csrf' } }) : denied('CSRF_INVALID', 403),
+    )
+    const http = createHttpClient(base, fetcher, serialLock())
+    await expect(http.request('/auth/logout', { method: 'POST' })).rejects.toMatchObject({ code: 'CSRF_INVALID' })
+    expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith('/auth/logout'))).toHaveLength(2)
+  })
+  it('refreshes once and repeats the request once after AUTHENTICATION_REQUIRED', async () => {
+    let valid = false
+    const fetcher = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).endsWith('/auth/csrf')) return json({ data: { csrfToken: 'csrf' } })
+      if (String(input).endsWith('/auth/refresh')) {
+        valid = true
+        return json({ data: {} })
+      }
+      return valid ? json({ data: { ok: true } }) : denied('AUTHENTICATION_REQUIRED')
+    })
+    const http = createHttpClient(base, fetcher, serialLock())
+    await expect(http.request('/organizations')).resolves.toEqual({ data: { ok: true } })
+    expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith('/auth/refresh'))).toHaveLength(1)
+    expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith('/organizations'))).toHaveLength(2)
+  })
+  it('reports PERMISSION_REQUIRED so the session can reload its permissions', async () => {
+    const fetcher = vi.fn<typeof fetch>(async (input) =>
+      String(input).endsWith('/auth/csrf') ? json({ data: { csrfToken: 'csrf' } }) : denied('PERMISSION_REQUIRED', 403),
+    )
+    const http = createHttpClient(base, fetcher, serialLock())
+    const changed = vi.fn()
+    http.onPermissionsChanged(changed)
+    await expect(http.request('/organizations', { method: 'POST' })).rejects.toMatchObject({ status: 403 })
+    expect(changed).toHaveBeenCalledOnce()
+  })
 })

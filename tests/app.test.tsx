@@ -348,4 +348,37 @@ describe('current backend flows', () => {
     expect(screen.getByRole('heading', { name: 'Organizations' })).toBeInTheDocument()
     expect(document.title).toBe('SGEn | Organizations')
   })
+  it('shows the attempts left and returns to the email step when the MFA challenge is no longer valid', async () => {
+    const user = userEvent.setup()
+    render(fixture({ mfaLogin: true }).services)
+    await signIn(user)
+    const code = await screen.findByLabelText('Código de verificación')
+    for (const attemptsLeft of [4, 3, 2, 1]) {
+      await user.clear(code)
+      await user.type(code, '000000')
+      await user.click(screen.getByRole('button', { name: 'Verificar código' }))
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        attemptsLeft === 1 ? 'Te queda 1 intento.' : `Te quedan ${attemptsLeft} intentos.`,
+      )
+    }
+    await user.clear(code)
+    await user.type(code, '000000')
+    await user.click(screen.getByRole('button', { name: 'Verificar código' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('La solicitud de verificación venció.')
+    expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Código de verificación')).not.toBeInTheDocument()
+  })
+  it('reloads permissions after PERMISSION_REQUIRED and hides the invitation form', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: tenantSession() })
+    render(setup.services, '/security')
+    await user.click(await screen.findByRole('tab', { name: /Usuarios y roles/ }))
+    await user.type(screen.getByLabelText('Correo electrónico'), 'new.member@example.test')
+    await user.click(screen.getByRole('checkbox', { name: /Auditor interno/ }))
+    const session = tenantSession()
+    setup.setSession({ ...session, permissions: session.permissions.filter(({ code }) => code !== 'MANAGE_USERS') })
+    await user.click(screen.getByRole('button', { name: 'Enviar invitación' }))
+    expect(await screen.findByText('Tu cuenta no tiene permiso para invitar miembros a esta organización.')).toBeInTheDocument()
+    expect(setup.services.auth.getSnapshot().session?.permissions.map(({ code }) => code)).not.toContain('MANAGE_USERS')
+  })
 })
