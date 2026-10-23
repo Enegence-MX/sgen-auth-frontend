@@ -16,6 +16,7 @@ interface AuthStepContentProps {
   tenantId: string
   mfaChallenge?: MfaChallenge
   mfaCode: string
+  mfaTimeLeft?: string
   busy: boolean
   showPassword: boolean
   actionLabel: string
@@ -36,6 +37,7 @@ export function AuthStepContent({
   tenantId,
   mfaChallenge,
   mfaCode,
+  mfaTimeLeft,
   busy,
   showPassword,
   actionLabel,
@@ -103,6 +105,7 @@ export function AuthStepContent({
       <div className={styles.headerBox}>
         <h1 className={styles.title}>{t('auth.mfaTitle')}</h1>
         <p className={styles.subtitle}>{t('auth.mfaSubtitle', { email: mfaChallenge?.sentTo ?? credentials.email })}</p>
+        {mfaTimeLeft && <p className={styles.subtitle} aria-live="off">{t('auth.mfaExpiresIn', { time: mfaTimeLeft })}</p>}
       </div>
       <div>
         <TextField id="mfaCode" label={t('auth.mfaCode')} type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} className="text-center font-mono text-2xl tracking-[0.3em]" value={mfaCode} onChange={(event) => onCodeChange(event.target.value.replace(/\D/g, ''))} required />

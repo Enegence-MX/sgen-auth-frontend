@@ -1,7 +1,9 @@
 import { useState, type SubmitEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation } from 'react-router'
-import { tenantChoices, type TenantChoice } from '../../features/auth/model/session'
+import { mfaAttemptsLeft, tenantChoices, type TenantChoice } from '../../features/auth/model/session'
+import { ApiError, hasCode } from '../../shared/api/errors'
+import { formatCountdown, useCountdown } from '../hooks/use-countdown'
 import type { MfaChallenge } from '../../features/auth/model/mfa-challenge'
 import { Spinner } from '../../shared/ui/Loading'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
@@ -25,6 +27,13 @@ export function AuthPage() {
   const [mfaCode, setMfaCode] = useState('')
   const [showPwd, setShowPwd] = useState(false)
 
+  const mfaTimeLeft = useCountdown(step === 'mfa' ? mfaChallenge?.expiresAt : undefined, () => {
+    setMfaChallenge(undefined)
+    setMfaCode('')
+    setStep('password')
+    setError(new ApiError(401, 'MFA_CHALLENGE_INVALID'))
+  })
+
   const handleContinueEmail = () => {
     if (!credentials.email.trim()) return
     setStep('password')
@@ -44,6 +53,7 @@ export function AuthPage() {
         setMfaChallenge(undefined)
         setMfaCode('')
       } catch (failure) {
+        if (hasCode(failure, 'MFA_CHALLENGE_INVALID')) cancel()
         setError(failure)
       } finally {
         setBusy(false)
@@ -90,6 +100,7 @@ export function AuthPage() {
   }
 
   const actionLabel = choices.length ? t('auth.continue') : t('auth.loginButton')
+  const attemptsLeft = mfaAttemptsLeft(error)
 
   if (state.status === 'authenticated') return <Navigate to="/organizations" replace />
   if (state.status === 'loading')
@@ -113,6 +124,7 @@ export function AuthPage() {
             tenantId={tenantId}
             mfaChallenge={mfaChallenge}
             mfaCode={mfaCode}
+            mfaTimeLeft={mfaTimeLeft === undefined ? undefined : formatCountdown(mfaTimeLeft)}
             busy={busy}
             showPassword={showPwd}
             actionLabel={actionLabel}
@@ -126,7 +138,11 @@ export function AuthPage() {
           />
         </fieldset>
       </form>
-      {error !== undefined && <ErrorNotice error={error} />}
+      {error !== undefined && (
+        <ErrorNotice error={error}>
+          {attemptsLeft !== undefined && <p>{t('auth.mfaAttemptsLeft', { count: attemptsLeft })}</p>}
+        </ErrorNotice>
+      )}
       {state.status === 'error' && error === undefined && <ErrorNotice error={state.error} />}
     </main>
   )

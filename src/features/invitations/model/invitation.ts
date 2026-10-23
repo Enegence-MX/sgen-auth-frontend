@@ -9,10 +9,10 @@ export interface InvitationDetails {
   hasMfa: boolean
   mfaRequired: boolean
   passwordMinLength: number
-  passwordExpiryDays?: number | null
-  passwordHistoryCount?: number
-  mfaAllowedMethods?: string[]
-  authMode?: 'LOCAL' | 'HYBRID' | 'FEDERATED'
+  passwordExpiryDays: number | null
+  passwordHistoryCount: number
+  mfaAllowedMethods: string[]
+  authMode: 'LOCAL' | 'HYBRID' | 'FEDERATED'
   mfaWaiver: { version: string; text: string } | null
 }
 

@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useServices, useSession } from '../services/services-context'
+import { isPlatform as isPlatformSession } from '../../features/auth/model/session'
 import { useResource } from '../hooks/use-resource'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
@@ -44,6 +45,9 @@ const invitationRoles: readonly InvitationRole[] = [
   'INTERNAL_AUDITOR',
 ]
 
+const DEFAULT_EXPIRY_DAYS = 90
+const MAX_EXPIRY_DAYS = 730
+
 export function SecurityConsolePage() {
   const { t } = useTranslation()
   const session = useSession()
@@ -53,8 +57,7 @@ export function SecurityConsolePage() {
     setSupportOpen: (open: boolean) => void
   }>()
   const isPlatform =
-    session.status === 'authenticated' &&
-    session.session.context.accessMode === 'PLATFORM_SUPERADMIN'
+    session.status === 'authenticated' && isPlatformSession(session.session)
   const [selectedOrganizationId, setSelectedOrganizationId] = useState('')
   const loadOrganizationOptions = useCallback(
     (signal: AbortSignal) =>
@@ -90,9 +93,7 @@ export function SecurityConsolePage() {
   }>()
   const [savingPolicy, setSavingPolicy] = useState(false)
   const [policySaveError, setPolicySaveError] = useState<unknown>()
-  const [authModePreview, setAuthModePreview] = useState<'LOCAL' | 'HYBRID' | 'FEDERATED'>('HYBRID')
   const [allowMfaOptOutPreview, setAllowMfaOptOutPreview] = useState(false)
-  const [federatedMfaModePreview, setFederatedMfaModePreview] = useState('REQUIRE_IDP_EVIDENCE')
 
   const policy = policyResource.value
   const tenantKey = organizationId ?? ''
@@ -135,23 +136,18 @@ export function SecurityConsolePage() {
 
   async function savePolicies(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!organizationId || !policyValues || isPlatform) return
+    if (!organizationId || !policyBase || isPlatform) return
+    const changes: Partial<SecurityPolicyChanges> = Object.fromEntries(
+      Object.entries(draft).filter(([key, value]) => policyBase[key as keyof SecurityPolicyChanges] !== value),
+    )
+    if (!Object.keys(changes).length) {
+      setSaved(true)
+      return
+    }
     setSavingPolicy(true)
     setPolicySaveError(undefined)
     try {
-      const updated = await organizations.updateSecurityPolicy(organizationId, {
-        mfaRequired: policyValues.mfaRequired,
-        passwordMinLength: policyValues.passwordMinLength,
-        passwordExpiryDays: policyValues.passwordExpiryDays,
-        sessionMaxHours: policyValues.sessionMaxHours,
-        idleTimeoutMinutes: policyValues.idleTimeoutMinutes,
-        maxConcurrentSessions: policyValues.maxConcurrentSessions,
-        lockoutEnabled: policyValues.lockoutEnabled,
-        maxLoginAttempts: policyValues.maxLoginAttempts,
-        attemptWindowSeconds: policyValues.attemptWindowSeconds,
-        lockoutDurationMinutes: policyValues.lockoutDurationMinutes,
-        invitationExpiryHours: policyValues.invitationExpiryHours,
-      })
+      const updated = await organizations.updateSecurityPolicy(organizationId, changes)
       setSavedPolicy({ organizationId, value: updated })
       setPolicyDraft(undefined)
       setSaved(true)
@@ -232,16 +228,19 @@ export function SecurityConsolePage() {
           <h3 className="m-0 mb-4 font-heading text-base font-semibold text-ink">{t('securityConsole.authenticationMode')}</h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {(['LOCAL', 'HYBRID', 'FEDERATED'] as const).map((mode) => {
-              const selected = authModePreview === mode
+              const available = mode === 'LOCAL'
               return (
                 <button
                   key={mode}
                   type="button"
-                  aria-pressed={selected}
-                  onClick={() => setAuthModePreview(mode)}
-                  className={`min-h-20 cursor-pointer rounded-control border-2 border-solid p-3 text-left transition-colors ${selected ? 'border-brand bg-brand-soft' : 'border-line bg-panel hover:bg-subtle'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand`}
+                  aria-pressed={available}
+                  disabled={!available}
+                  className={`min-h-20 rounded-control border-2 border-solid p-3 text-left ${available ? 'border-brand bg-brand-soft' : 'cursor-not-allowed border-line bg-panel opacity-60'}`}
                 >
-                  <span className="block text-sm font-bold text-ink">{t(`securityConsole.authMode.${mode}`)}</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink">
+                    {t(`securityConsole.authMode.${mode}`)}
+                    {!available && <Badge variant="neutral">{t('securityConsole.comingSoon')}</Badge>}
+                  </span>
                   <span className="mt-1 block text-xs leading-relaxed text-body">{t(`securityConsole.authModeDescription.${mode}`)}</span>
                 </button>
               )
@@ -268,16 +267,26 @@ export function SecurityConsolePage() {
                   onChange={(event) => updateNumber((value) => updatePolicy('passwordMinLength', value), event.target.value, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)}
                 />
               </div>
-              <div className={policyFieldClassName}>
-                <SelectField
-                  label={t('securityConsole.passwordExpiry')}
-                  value={policyValues.passwordExpiryDays ?? ''}
+              <div className="flex items-center justify-between gap-4">
+                <p className="m-0 font-semibold text-ink">{t('password.noExpiry')}</p>
+                <Switch
+                  label={t('password.noExpiry')}
+                  hideLabel
+                  checked={policyValues.passwordExpiryDays === null}
                   disabled={isPlatform}
-                  onChange={(event) => updatePolicy('passwordExpiryDays', event.target.value === '' ? null : Number(event.target.value))}
-                >
-                  <option value="">{t('password.noExpiry')}</option>
-                  {[30, 60, 90, 180, 365, 730].map((days) => <option key={days} value={days}>{days} {t('securityConsole.days')}</option>)}
-                </SelectField>
+                  onChange={(event) => updatePolicy('passwordExpiryDays', event.target.checked ? null : DEFAULT_EXPIRY_DAYS)}
+                />
+              </div>
+              <div className={policyFieldClassName}>
+                <TextField
+                  type="number"
+                  min={1}
+                  max={MAX_EXPIRY_DAYS}
+                  label={`${t('securityConsole.passwordExpiry')} (${t('securityConsole.days')})`}
+                  disabled={isPlatform || policyValues.passwordExpiryDays === null}
+                  value={policyValues.passwordExpiryDays ?? ''}
+                  onChange={(event) => updateNumber((value) => updatePolicy('passwordExpiryDays', value), event.target.value, 1, MAX_EXPIRY_DAYS)}
+                />
               </div>
               <p className="m-0 text-sm leading-relaxed text-body">{t('password.expiryHint')}</p>
               <p className="m-0 rounded-control bg-subtle p-3 text-sm leading-relaxed text-body">
@@ -324,9 +333,9 @@ export function SecurityConsolePage() {
                 <Switch label={t('securityConsole.allowMfaOptOut')} hideLabel checked={allowMfaOptOutPreview} onChange={(event) => setAllowMfaOptOutPreview(event.target.checked)} />
               </div>
               <fieldset className="m-0 grid gap-2 border-0 p-0">
-                <legend className="mb-2 text-sm font-semibold text-ink">{t('securityConsole.federatedMfa')}</legend>
+                <legend className="mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-ink">{t('securityConsole.federatedMfa')}<Badge variant="neutral">{t('securityConsole.comingSoon')}</Badge></legend>
                 {(['TRUST_IDP', 'REQUIRE_IDP_EVIDENCE', 'REQUIRE_SGEN_MFA'] as const).map((mode) => (
-                  <Radio key={mode} name="federated-mfa-mode" checked={federatedMfaModePreview === mode} onChange={() => setFederatedMfaModePreview(mode)} label={t(`securityConsole.federatedMfaMode.${mode}.title`)} description={t(`securityConsole.federatedMfaMode.${mode}.description`)} containerClassName="rounded-control border border-solid border-line bg-panel p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft" />
+                  <Radio key={mode} name="federated-mfa-mode" disabled checked={false} readOnly label={t(`securityConsole.federatedMfaMode.${mode}.title`)} description={t(`securityConsole.federatedMfaMode.${mode}.description`)} containerClassName="rounded-control border border-solid border-line bg-panel p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft" />
                 ))}
               </fieldset>
             </div>

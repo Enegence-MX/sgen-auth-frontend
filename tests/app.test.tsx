@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { render } from './render'
@@ -85,11 +85,13 @@ describe('current backend flows', () => {
     expect(screen.queryByLabelText('Histórico sin reúso')).not.toBeInTheDocument()
     expect(screen.getByText('Código por correo')).toBeInTheDocument()
     expect(screen.getByText(/Aplicación autenticadora/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /HÍBRIDO/ })).toHaveAttribute('aria-pressed', 'true')
-    await user.click(screen.getByRole('button', { name: /FEDERADO/ }))
-    expect(screen.getByRole('button', { name: /FEDERADO/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /LOCAL/ })).toHaveAttribute('aria-pressed', 'true')
+    for (const mode of [/HÍBRIDO/, /FEDERADO/]) {
+      expect(screen.getByRole('button', { name: mode })).toBeDisabled()
+      expect(screen.getByRole('button', { name: mode })).toHaveTextContent('Próximamente')
+    }
+    expect(screen.getByRole('radio', { name: /CONFIAR EN EL IdP/ })).toBeDisabled()
     await user.click(screen.getByRole('switch', { name: 'Permitir opt-out con deslinde' }))
-    await user.click(screen.getByRole('radio', { name: /CONFIAR EN EL IdP/ }))
     expect(screen.queryByText(/SMS/i)).not.toBeInTheDocument()
     await user.click(screen.getByRole('switch', { name: 'Exigir MFA' }))
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
@@ -111,6 +113,7 @@ describe('current backend flows', () => {
     expect(savedPolicy).not.toHaveProperty('federatedMfaMode')
     expect(savedPolicy).not.toHaveProperty('mfaAllowOptOut')
     expect(savedPolicy).not.toHaveProperty('passwordHistoryCount')
+    expect(savedPolicy).toEqual({ mfaRequired: false })
 
     await user.click(screen.getByRole('tab', { name: /Mapeo de grupos/ }))
     expect(await screen.findByRole('table', { name: 'Mapeo de grupos' })).toBeInTheDocument()
@@ -165,7 +168,8 @@ describe('current backend flows', () => {
     expect(await screen.findByRole('list', { name: 'Progreso de activación' })).toBeInTheDocument()
     expect(screen.getByText('Política de la organización')).toBeInTheDocument()
     expect(screen.getByText('Sin caducidad periódica')).toBeInTheDocument()
-    expect(screen.queryByText('Histórico sin reúso')).not.toBeInTheDocument()
+    expect(screen.getByText('Histórico sin reúso')).toBeInTheDocument()
+    expect(screen.getByText('5 contraseñas')).toBeInTheDocument()
     await user.type(await screen.findByLabelText('Nombre completo'), 'New Member')
     await user.type(screen.getByLabelText('Crea una contraseña'), 'a-long-test-password')
     await user.type(screen.getByLabelText('Confirma la contraseña'), 'a-long-test-password')
@@ -195,18 +199,6 @@ describe('current backend flows', () => {
         body: expect.stringContaining('"mfa":"WAIVE"'),
       }),
     )
-  })
-  it('renders invitation details when the API omits newer policy fields', async () => {
-    const setup = fixture({
-      invitation: {
-        passwordExpiryDays: undefined,
-        mfaAllowedMethods: undefined,
-        authMode: undefined,
-      },
-    })
-    render(setup.services, '/invitations/test_invitation_token_123456')
-    expect(await screen.findByText('Política de la organización')).toBeInTheDocument()
-    expect(screen.getByText('mariana.torres@energia-bajio.test')).toBeInTheDocument()
   })
   it('enables optional MFA without requesting a second activation code', async () => {
     const user = userEvent.setup()
@@ -323,9 +315,8 @@ describe('current backend flows', () => {
   })
   it.each([
     'INVALID_CREDENTIALS',
-    'MFA_REQUIRED',
     'FEDERATED_LOGIN_REQUIRED',
-    'PASSWORD_CHANGE_REQUIRED',
+    'RATE_LIMITED',
   ])('does not authenticate when backend returns %s', async (code) => {
     const user = userEvent.setup()
     const { router } = render(fixture({ loginError: code }).services)
@@ -360,4 +351,100 @@ describe('current backend flows', () => {
     expect(screen.getByRole('heading', { name: 'Organizations' })).toBeInTheDocument()
     expect(document.title).toBe('SGEn | Organizations')
   })
+  it('shows the attempts left and returns to the email step when the MFA challenge is no longer valid', async () => {
+    const user = userEvent.setup()
+    render(fixture({ mfaLogin: true }).services)
+    await signIn(user)
+    const code = await screen.findByLabelText('Código de verificación')
+    for (const attemptsLeft of [4, 3, 2, 1]) {
+      await user.clear(code)
+      await user.type(code, '000000')
+      await user.click(screen.getByRole('button', { name: 'Verificar código' }))
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        attemptsLeft === 1 ? 'Te queda 1 intento.' : `Te quedan ${attemptsLeft} intentos.`,
+      )
+    }
+    await user.clear(code)
+    await user.type(code, '000000')
+    await user.click(screen.getByRole('button', { name: 'Verificar código' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('La solicitud de verificación venció.')
+    expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Código de verificación')).not.toBeInTheDocument()
+  })
+  it('reloads permissions after PERMISSION_REQUIRED and hides the invitation form', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: tenantSession() })
+    render(setup.services, '/security')
+    await user.click(await screen.findByRole('tab', { name: /Usuarios y roles/ }))
+    await user.type(screen.getByLabelText('Correo electrónico'), 'new.member@example.test')
+    await user.click(screen.getByRole('checkbox', { name: /Auditor interno/ }))
+    const session = tenantSession()
+    setup.setSession({ ...session, permissions: session.permissions.filter(({ code }) => code !== 'MANAGE_USERS') })
+    await user.click(screen.getByRole('button', { name: 'Enviar invitación' }))
+    expect(await screen.findByText('Tu cuenta no tiene permiso para invitar miembros a esta organización.')).toBeInTheDocument()
+    expect(setup.services.auth.getSnapshot().session?.permissions.map(({ code }) => code)).not.toContain('MANAGE_USERS')
+  })
+  it('sends a password expiry between 1 and 730 days or null for no expiry', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: tenantSession() })
+    render(setup.services, '/security')
+    const noExpiry = await screen.findByRole('switch', { name: 'Sin caducidad periódica' })
+    expect(noExpiry).toBeChecked()
+    expect(screen.getByLabelText('Vigencia de contraseña (días)')).toBeDisabled()
+    await user.click(noExpiry)
+    fireEvent.change(screen.getByLabelText('Vigencia de contraseña (días)'), { target: { value: '45' } })
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await screen.findByRole('status')
+    const bodies = () => setup.fetcher.mock.calls
+      .filter(([url, init]) => String(url).endsWith('/security-policy') && init?.method === 'PATCH')
+      .map(([, init]) => JSON.parse(String(init?.body)) as unknown)
+    expect(bodies()).toEqual([{ passwordExpiryDays: 45 }])
+    await user.click(screen.getByRole('switch', { name: 'Sin caducidad periódica' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await waitFor(() => expect(bodies()).toHaveLength(2))
+    expect(bodies()[1]).toEqual({ passwordExpiryDays: null })
+  })
+  it('shows the invitation auth mode only as information', async () => {
+    render(fixture({ invitation: { authMode: 'FEDERATED' } }).services, '/invitations/test_invitation_token_123456')
+    expect(await screen.findByText('FEDERADO')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /SSO/ })).not.toBeInTheDocument()
+  })
+  it('labels inactive organizations as suspended', async () => {
+    const setup = fixture({ initial: platform })
+    setup.rows[1]!.active = false
+    const { router } = render(setup.services, '/organizations')
+    expect(await screen.findByText('Suspendida')).toBeInTheDocument()
+    await act(async () => {
+      await router.navigate(`/organizations/${beta}`)
+    })
+    expect(await screen.findByText('Suspendida')).toBeInTheDocument()
+  })
+  it('counts down the MFA challenge and returns to the password step when it expires', async () => {
+    const user = userEvent.setup()
+    render(fixture({ mfaLogin: true, mfaExpiresInMs: 1500 }).services)
+    await signIn(user)
+    expect(await screen.findByText(/El código vence en 0:0[0-2]/)).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByLabelText('Contraseña')).toBeInTheDocument(), { timeout: 3000 })
+    expect(screen.queryByLabelText('Código de verificación')).not.toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('La solicitud de verificación venció.')
+  })
+  it('creates an organization without required MFA when the switch is off', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: platform })
+    render(setup.services, '/organizations/new')
+    await user.type(await screen.findByLabelText('Razón social'), 'Optional MFA Organization')
+    await user.type(screen.getByLabelText('RFC maestro'), 'DDD010101DD1')
+    const mfa = screen.getByRole('switch', { name: 'Exigir MFA' })
+    expect(mfa).toBeChecked()
+    await user.click(mfa)
+    await user.click(screen.getByRole('button', { name: 'Crear organización' }))
+    await screen.findByRole('heading', { name: 'Optional MFA Organization' })
+    const create = setup.fetcher.mock.calls.find(([url, init]) => String(url).endsWith('/organizations') && init?.method === 'POST')
+    expect(JSON.parse(String(create?.[1]?.body))).toEqual({
+      legalName: 'Optional MFA Organization',
+      rfc: 'DDD010101DD1',
+      mfaRequired: false,
+    })
+  })
 })
+

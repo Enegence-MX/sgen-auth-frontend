@@ -2,8 +2,10 @@ import { useState, type SubmitEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../services/services-context'
+import { isPlatform } from '../../features/auth/model/session'
 import { TextField } from '../../shared/ui/TextField'
 import { TextArea } from '../../shared/ui/TextArea'
+import { Switch } from '../../shared/ui/Switch'
 import { Button } from '../../shared/ui/Button'
 import { Notice } from '../../shared/ui/Notice'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
@@ -18,11 +20,12 @@ export function NewOrganizationPage() {
   const state = useSession()
   const navigate = useNavigate()
   const [fields, setFields] = useState({
-    razonSocial: '',
-    rfcMaestro: '',
-    sectorIndustrial: '',
-    domicilioFiscal: '',
+    legalName: '',
+    rfc: '',
+    industrySector: '',
+    taxAddress: '',
   })
+  const [mfaRequired, setMfaRequired] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>()
   function change(key: keyof typeof fields, value: string) {
@@ -34,10 +37,11 @@ export function NewOrganizationPage() {
     setError(undefined)
     try {
       const item = await organizations.create({
-        razonSocial: fields.razonSocial.trim(),
-        rfcMaestro: fields.rfcMaestro.trim().toUpperCase(),
-        ...(fields.sectorIndustrial.trim() ? { sectorIndustrial: fields.sectorIndustrial.trim() } : {}),
-        ...(fields.domicilioFiscal.trim() ? { domicilioFiscal: fields.domicilioFiscal.trim() } : {}),
+        legalName: fields.legalName.trim(),
+        rfc: fields.rfc.trim().toUpperCase(),
+        ...(fields.industrySector.trim() ? { industrySector: fields.industrySector.trim() } : {}),
+        ...(fields.taxAddress.trim() ? { taxAddress: fields.taxAddress.trim() } : {}),
+        mfaRequired,
       })
       await navigate(`/organizations/${item.id}`, { replace: true, state: { created: true } })
     } catch (failure) {
@@ -47,7 +51,7 @@ export function NewOrganizationPage() {
     }
   }
   if (state.status !== 'authenticated') return null
-  if (state.session.context.accessMode !== 'PLATFORM_SUPERADMIN') return <Navigate to="/organizations" replace />
+  if (!isPlatform(state.session)) return <Navigate to="/organizations" replace />
   return (
     <section className="grid max-w-3xl gap-6">
       <Link to="/organizations" className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold no-underline hover:underline"><ArrowLeft size={16} aria-hidden="true" />{t('app.back')}</Link>
@@ -57,16 +61,16 @@ export function NewOrganizationPage() {
           <fieldset disabled={busy}>
             <TextField
               label={t('organizations.legalName')}
-              value={fields.razonSocial}
-              onChange={(event) => change('razonSocial', event.target.value)}
+              value={fields.legalName}
+              onChange={(event) => change('legalName', event.target.value)}
               required
               maxLength={255}
               autoComplete="organization"
             />
             <TextField
               label={t('organizations.taxId')}
-              value={fields.rfcMaestro}
-              onChange={(event) => change('rfcMaestro', event.target.value.toUpperCase())}
+              value={fields.rfc}
+              onChange={(event) => change('rfc', event.target.value.toUpperCase())}
               required
               minLength={12}
               maxLength={13}
@@ -74,19 +78,26 @@ export function NewOrganizationPage() {
             />
             <TextField
               label={`${t('organizations.sector')} (${t('organizations.optional')})`}
-              value={fields.sectorIndustrial}
-              onChange={(event) => change('sectorIndustrial', event.target.value)}
+              value={fields.industrySector}
+              onChange={(event) => change('industrySector', event.target.value)}
               maxLength={150}
             />
             <TextArea
               label={`${t('organizations.address')} (${t('organizations.optional')})`}
               id="fiscal-address"
-              value={fields.domicilioFiscal}
-              onChange={(event) => change('domicilioFiscal', event.target.value)}
+              value={fields.taxAddress}
+              onChange={(event) => change('taxAddress', event.target.value)}
               maxLength={4000}
               rows={3}
               autoComplete="street-address"
             />
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="m-0 font-semibold text-ink">{t('securityConsole.mfaRequired')}</p>
+                <p className="mt-1 mb-0 text-sm text-body">{t('securityConsole.mfaRequiredHint')}</p>
+              </div>
+              <Switch label={t('securityConsole.mfaRequired')} hideLabel checked={mfaRequired} onChange={(event) => setMfaRequired(event.target.checked)} />
+            </div>
             <Notice>{t('organizations.createLimit')}</Notice>
             <div className="mt-6 flex flex-wrap items-center gap-3 border-0 border-t border-solid border-line pt-6">
               <Button type="submit" loading={busy}>{busy ? t('organizations.saving') : t('organizations.save')}</Button>

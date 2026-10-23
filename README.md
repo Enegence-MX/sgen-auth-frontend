@@ -6,8 +6,9 @@ Frontend de SGEn conectado al backend NestJS actual: login, selección de organi
 
 - Sesiones con cookies HttpOnly y CSRF; sin tokens en almacenamiento web.
 - Renovación de sesión coordinada entre pestañas y rutas protegidas.
-- Plataforma: listado, búsqueda, alta y detalle. Cliente: detalle de su organización y permisos.
-- Consola de seguridad en `/security`: un superadministrador puede seleccionar una organización y consultar su política; solo el administrador de esa organización puede modificarla mediante el backend. La pestaña Usuarios y roles permite enviar invitaciones con roles reales; el listado de miembros y los cambios posteriores de roles aún no tienen endpoints. Proveedores de identidad, mapeo de grupos, auditoría, dominios y contexto de soporte siguen siendo demostrativos. El acceso al diálogo de contexto de soporte está en la cabecera de la consola.
+- Plataforma: listado, búsqueda, alta, detalle, edición (razón social, sector y domicilio fiscal) y suspensión o reactivación con motivo. Cliente: detalle de su organización y permisos; con `MANAGE_ORGANIZATION_PROFILE` también edita sector y domicilio fiscal.
+- Un `accessMode` desconocido o `NO_CONTEXT` muestra solo un aviso y el cierre de sesión. Los permisos se vuelven a leer de `GET /auth/me` ante un 403 `PERMISSION_REQUIRED`.
+- Consola de seguridad en `/security`: un superadministrador puede seleccionar una organización y consultar su política; solo el administrador de esa organización puede modificarla mediante el backend. La pestaña Usuarios y roles permite enviar invitaciones con roles reales; el listado de miembros y los cambios posteriores de roles aún no tienen endpoints. Proveedores de identidad, mapeo de grupos, dominios y contexto de soporte siguen siendo demostrativos. Los modos de autenticación `HYBRID` y `FEDERATED` y el MFA federado se muestran como «Próximamente» y nunca se envían. El acceso al diálogo de contexto de soporte está en la cabecera de la consola.
 - Activación pública por invitación en `/invitations/:token`: valida el enlace, crea una cuenta nueva o vincula una existente y aplica las reglas de contraseña y MFA devueltas por el backend. El MFA de correo se completa con código de un solo uso durante el inicio de sesión. No hay registro público.
 
 ## Tech Stack
@@ -65,7 +66,12 @@ Use the platform superadmin created with `npm run platform:create-admin` in the 
 | --------------- | ------------------------------------- |
 | `npm run dev`   | Start Vite and check the backend      |
 | `npm run check` | Lint, types, tests and build          |
+| `npm run contract:check` | Compare `contract/openapi.json` with `../sgen-auth-backend/docs/openapi.json` |
 | `npm run build` | Production build in `dist/`           |
+
+## API contract
+
+`contract/openapi.json` is a copy of `sgen-auth-backend/docs/openapi.json`. The tests validate every request and response of the test fixtures against it (ajv, closed schemas), so a fixture that drifts from the contract fails. When the backend contract changes, copy the file again, run `npm run contract:check` and update the client. Without the backend repo next to this one, the check is skipped with a message.
 
 ## Organization
 

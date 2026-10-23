@@ -13,6 +13,7 @@ export function createServices(config: AppConfig, fetcher: typeof fetch = fetch,
   const auth = new SessionStore(createAuthApi(http))
   http.onSessionExpired(auth.expire)
   http.onPasswordChangeRequired(() => { void auth.restore() })
+  http.onPermissionsChanged(() => { void auth.restore() })
   return {
     auth,
     passwords: createPasswordsApi(http),
