@@ -1,8 +1,9 @@
 import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render } from './render'
 import { alpha, beta, fixture, platform, tenantSession } from './fixtures'
+import { ApiError } from '../src/shared/api/errors'
 
 async function signIn(user: ReturnType<typeof userEvent.setup>) {
   await user.type(await screen.findByLabelText('Correo electrónico'), 'test@example.test')
@@ -50,6 +51,23 @@ describe('current backend flows', () => {
     )
     expect(screen.getByLabelText('Razón social')).toHaveValue('Duplicate Organization')
   })
+  it('shows API validation errors next to the affected organization fields', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: platform })
+    vi.spyOn(setup.services.organizations, 'create').mockRejectedValue(
+      new ApiError(400, 'VALIDATION_FAILED', [
+        'legalName must be longer than or equal to 2 characters',
+        'rfc must match the expected format',
+      ]),
+    )
+    render(setup.services, '/organizations/new')
+    await user.type(await screen.findByLabelText('Razón social'), 'A')
+    await user.type(screen.getByLabelText('RFC maestro'), 'CCC010101CC1')
+    await user.click(screen.getByRole('button', { name: 'Crear organización' }))
+    expect(await screen.findAllByText('Revisa este campo.')).toHaveLength(2)
+    expect(screen.getByLabelText('Razón social')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText('RFC maestro')).toHaveAttribute('aria-invalid', 'true')
+  })
   it('requires tenant selection before showing a shared identity session', async () => {
     const user = userEvent.setup()
     const setup = fixture({ shared: true })
@@ -60,6 +78,11 @@ describe('current backend flows', () => {
     await user.selectOptions(screen.getByLabelText('Organización'), beta)
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
     await screen.findByRole('heading', { name: 'Development Beta' })
+    const loginCall = setup.fetcher.mock.calls.find(([url, init]) =>
+      String(url).endsWith('/auth/login') && init?.method === 'POST' &&
+      typeof init.body === 'string' && init.body.includes(`"tenantId":"${beta}"`),
+    )
+    expect(loginCall).toBeDefined()
     expect(screen.queryByRole('link', { name: 'Nueva organización' })).not.toBeInTheDocument()
     expect(router.state.location.pathname).toBe(`/organizations/${beta}`)
   })
@@ -286,7 +309,14 @@ describe('current backend flows', () => {
     await user.type(await screen.findByLabelText('Correo electrónico'), 'platform@example.test')
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
     await user.type(await screen.findByLabelText('Contraseña'), 'test-password')
+    const profileCallsBeforeLogin = setup.fetcher.mock.calls.filter(([url]) =>
+      String(url).endsWith('/auth/me'),
+    ).length
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    await screen.findByRole('heading', { name: 'Verifica tu correo' })
+    expect(
+      setup.fetcher.mock.calls.filter(([url]) => String(url).endsWith('/auth/me')),
+    ).toHaveLength(profileCallsBeforeLogin)
     await user.type(await screen.findByLabelText('Código de verificación'), '123456')
     await user.click(screen.getByRole('button', { name: 'Verificar código' }))
     expect(await screen.findByText('Development Alpha')).toBeInTheDocument()
@@ -300,6 +330,35 @@ describe('current backend flows', () => {
         }),
       }),
     )
+  })
+  it('keeps an MFA challenge available after an invalid code so the user can retry', async () => {
+    const user = userEvent.setup()
+    render(fixture({ mfaLogin: true }).services)
+    await user.type(await screen.findByLabelText('Correo electrónico'), 'platform@example.test')
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await user.type(await screen.findByLabelText('Contraseña'), 'test-password')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    const codeField = await screen.findByLabelText('Código de verificación')
+    await user.type(codeField, '000000')
+    await user.click(screen.getByRole('button', { name: 'Verificar código' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('El código no es correcto.')
+    expect(screen.getByLabelText('Código de verificación')).toBeInTheDocument()
+    await user.clear(screen.getByLabelText('Código de verificación'))
+    await user.type(screen.getByLabelText('Código de verificación'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Verificar código' }))
+    await screen.findByText('Development Alpha')
+  })
+  it('returns to password entry when an MFA challenge has expired', async () => {
+    const user = userEvent.setup()
+    render(
+      fixture({ mfaLogin: true, mfaExpiresAt: '2020-01-01T00:00:00.000Z' }).services,
+    )
+    await user.type(await screen.findByLabelText('Correo electrónico'), 'platform@example.test')
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await user.type(await screen.findByLabelText('Contraseña'), 'test-password')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('La solicitud de verificación venció.')
+    expect(await screen.findByLabelText('Contraseña')).toBeInTheDocument()
   })
   it('lets platform admins select an organization and opens the support dialog', async () => {
     const user = userEvent.setup()

@@ -66,18 +66,25 @@ export class SessionStore {
   }
   async login(credentials: Credentials, tenantId?: string): Promise<MfaChallenge | void> {
     this.revision++
+    const revision = this.revision
+    this.update({ status: 'anonymous', session: null })
     const result = await this.api.login(credentials, tenantId)
-    if ('mfaRequired' in result && result.mfaRequired) return result
+    if (result.status === 'mfa') return result.challenge
     const session = await this.api.profile()
-    this.update({ status: 'authenticated', session })
-    this.broadcast()
+    if (revision === this.revision) {
+      this.update({ status: 'authenticated', session })
+      this.broadcast()
+    }
   }
   async verifyMfa(challengeToken: string, code: string): Promise<void> {
     this.revision++
+    const revision = this.revision
     await this.api.verifyMfa(challengeToken, code)
     const session = await this.api.profile()
-    this.update({ status: 'authenticated', session })
-    this.broadcast()
+    if (revision === this.revision) {
+      this.update({ status: 'authenticated', session })
+      this.broadcast()
+    }
   }
   async logout(): Promise<void> {
     try {
@@ -99,9 +106,9 @@ export class SessionStore {
   async updateSettings(settings: { language?: string; theme?: string }): Promise<void> {
     await this.api.updateSettings(settings)
     if (this.state.status === 'authenticated') {
-      const updatedSession = { 
-        ...this.state.session, 
-        identity: { ...this.state.session.identity, ...settings } 
+      const updatedSession = {
+        ...this.state.session,
+        identity: { ...this.state.session.identity, ...settings },
       }
       this.update({ status: 'authenticated', session: updatedSession })
       this.broadcast()

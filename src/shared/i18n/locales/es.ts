@@ -145,6 +145,7 @@ export const es = {
     empty: 'No se encontraron organizaciones.',
     view: 'Ver detalle',
     legalName: 'Razón social',
+    invalidField: 'Revisa este campo.',
     taxId: 'RFC maestro',
     sector: 'Sector industrial',
     address: 'Domicilio fiscal',
@@ -180,6 +181,8 @@ export const es = {
     noOrganizations: 'No hay organizaciones disponibles para consultar.',
     platformPolicyReadOnly:
       'Administración de plataforma: puedes consultar la política. Para modificarla, inicia sesión como administrador de esa organización.',
+    policyPermissionRequired:
+      'Tu sesión no tiene el permiso MANAGE_SECURITY_POLICIES para modificar esta política.',
     policies: 'Políticas de seguridad',
     providers: 'Proveedores de identidad',
     users: 'Usuarios y roles',
@@ -325,6 +328,8 @@ export const es = {
     federated: 'Esta organización requiere acceso federado, que aún no está disponible.',
     passwordChange: 'Actualiza tu contraseña para continuar.',
     notFound: 'Organización no encontrada o fuera de tu contexto actual.',
+    resourceNotFound: 'No se encontró el recurso solicitado.',
+    conflict: 'La operación entra en conflicto con el estado actual.',
     duplicate: 'Ya existe una organización con este RFC.',
     policy: 'Un administrador debe revisar la política de seguridad de la organización.',
     validation: 'Revisa los datos ingresados e intenta de nuevo.',

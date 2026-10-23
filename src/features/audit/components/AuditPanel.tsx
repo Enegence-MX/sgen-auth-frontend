@@ -17,13 +17,13 @@ import { AuditEventDetail } from './AuditEventDetail'
 import { AuditReference } from './audit-display'
 import { auditLabel } from '../model/audit-label'
 import type { AuditEvent, AuditFilters } from '../api/audit-api'
+import { hasPermission } from '../../auth/model/permissions'
 
 export function AuditPanel({ tenantId }: Readonly<{ tenantId?: string }>) {
   const session = useSession()
   const { t } = useTranslation()
   if (session.status !== 'authenticated') return null
-  const allowed = session.session.context.accessMode === 'PLATFORM_SUPERADMIN'
-    || session.session.permissions.some((permission) => permission.code === 'VIEW_SECURITY_AUDIT')
+  const allowed = hasPermission(session.session, 'VIEW_SECURITY_AUDIT', 'SECURITY')
   if (!allowed) return <Notice>{t('audit.denied')}</Notice>
   return <AuditResults key={tenantId ?? 'current'} tenantId={tenantId} />
 }

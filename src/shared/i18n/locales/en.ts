@@ -140,6 +140,7 @@ export const en = {
     empty: 'No organizations found.',
     view: 'View details',
     legalName: 'Legal name',
+    invalidField: 'Check this field.',
     taxId: 'Master RFC',
     sector: 'Industry sector',
     address: 'Fiscal address',
@@ -174,6 +175,8 @@ export const en = {
     noOrganizations: 'There are no organizations available to view.',
     platformPolicyReadOnly:
       'Platform administration can view this policy. To change it, sign in as an administrator of that organization.',
+    policyPermissionRequired:
+      'Your session does not have the MANAGE_SECURITY_POLICIES permission to change this policy.',
     policies: 'Security policies',
     providers: 'Identity providers',
     users: 'Users and roles',
@@ -318,6 +321,8 @@ export const en = {
     federated: 'This organization requires federated sign-in, which is not available yet.',
     passwordChange: 'Update your password to continue.',
     notFound: 'Organization not found or unavailable in your current context.',
+    resourceNotFound: 'The requested resource was not found.',
+    conflict: 'The operation conflicts with the current state.',
     duplicate: 'An organization with this RFC already exists.',
     policy: 'The organization’s security policy needs to be reviewed by an administrator.',
     validation: 'Check the entered values and try again.',

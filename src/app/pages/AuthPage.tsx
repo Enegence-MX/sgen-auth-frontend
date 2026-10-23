@@ -1,8 +1,9 @@
-import { useState, type SubmitEvent } from 'react'
+import { useEffect, useState, type SubmitEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation } from 'react-router'
 import { tenantChoices, type TenantChoice } from '../../features/auth/model/session'
 import type { MfaChallenge } from '../../features/auth/model/mfa-challenge'
+import { ApiError } from '../../shared/api/errors'
 import { Spinner } from '../../shared/ui/Loading'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { useServices, useSession } from '../services/services-context'
@@ -25,6 +26,18 @@ export function AuthPage() {
   const [mfaCode, setMfaCode] = useState('')
   const [showPwd, setShowPwd] = useState(false)
 
+  useEffect(() => {
+    if (!mfaChallenge) return
+    const delay = Date.parse(mfaChallenge.expiresAt) - Date.now()
+    const timer = globalThis.setTimeout(() => {
+      setMfaChallenge(undefined)
+      setMfaCode('')
+      setStep('password')
+      setError(new ApiError(401, 'MFA_CHALLENGE_INVALID'))
+    }, Math.max(0, delay))
+    return () => globalThis.clearTimeout(timer)
+  }, [mfaChallenge])
+
   const handleContinueEmail = () => {
     if (!credentials.email.trim()) return
     setStep('password')
@@ -39,11 +52,24 @@ export function AuthPage() {
     setBusy(true)
     setError(undefined)
     if (step === 'mfa' && mfaChallenge) {
+      if (Date.parse(mfaChallenge.expiresAt) <= Date.now()) {
+        setMfaChallenge(undefined)
+        setMfaCode('')
+        setStep('password')
+        setError(new ApiError(401, 'MFA_CHALLENGE_INVALID'))
+        setBusy(false)
+        return
+      }
       try {
         await auth.verifyMfa(mfaChallenge.challengeToken, mfaCode)
         setMfaChallenge(undefined)
         setMfaCode('')
       } catch (failure) {
+        if (failure instanceof ApiError && failure.code === 'MFA_CHALLENGE_INVALID') {
+          setMfaChallenge(undefined)
+          setMfaCode('')
+          setStep('password')
+        }
         setError(failure)
       } finally {
         setBusy(false)

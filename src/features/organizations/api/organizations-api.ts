@@ -1,7 +1,6 @@
 import type { HttpClient } from '../../../shared/api/http-client'
 import type { Envelope } from '../../../shared/api/response'
 import type {
-  Organization,
   OrganizationInput,
   OrganizationList,
   SecurityOrganizationOption,
@@ -24,19 +23,6 @@ interface BackendOrganizationPage {
   meta: { page: number; pageSize: number; total: number }
 }
 
-function toOrganization(organization: BackendOrganization): Organization {
-  return {
-    id: organization.id,
-    razonSocial: organization.legalName,
-    rfcMaestro: organization.rfc,
-    sectorIndustrial: organization.industrySector,
-    domicilioFiscal: organization.taxAddress,
-    active: organization.active,
-    createdAt: organization.createdAt,
-    updatedAt: organization.updatedAt,
-  }
-}
-
 export function createOrganizationsApi(http: HttpClient) {
   async function list(page: number, pageSize: number, search: string, signal?: AbortSignal) {
     const query = new URLSearchParams({
@@ -46,8 +32,8 @@ export function createOrganizationsApi(http: HttpClient) {
     })
     const result = await http.request<BackendOrganizationPage>(`/organizations?${query}`, { signal })
     return {
-      data: result.data.map(toOrganization),
-      meta: { page: result.meta.page, limit: result.meta.pageSize, total: result.meta.total },
+      data: result.data,
+      meta: result.meta,
     }
   }
 
@@ -60,7 +46,7 @@ export function createOrganizationsApi(http: HttpClient) {
       return result.data.map(
         (organization): SecurityOrganizationOption => ({
           id: organization.id,
-          name: organization.razonSocial,
+          name: organization.legalName,
         }),
       )
     },
@@ -69,19 +55,19 @@ export function createOrganizationsApi(http: HttpClient) {
         `/organizations/${encodeURIComponent(id)}`,
         { signal },
       )
-      return toOrganization(result.data)
+      return result.data
     },
     async create(input: OrganizationInput) {
       const result = await http.request<Envelope<BackendOrganization>>('/organizations', {
         method: 'POST',
         body: {
-          legalName: input.razonSocial,
-          rfc: input.rfcMaestro,
-          ...(input.sectorIndustrial ? { industrySector: input.sectorIndustrial } : {}),
-          ...(input.domicilioFiscal ? { taxAddress: input.domicilioFiscal } : {}),
+          legalName: input.legalName,
+          rfc: input.rfc,
+          ...(input.industrySector ? { industrySector: input.industrySector } : {}),
+          ...(input.taxAddress ? { taxAddress: input.taxAddress } : {}),
         },
       })
-      return toOrganization(result.data)
+      return result.data
     },
     async securityPolicy(id: string, signal?: AbortSignal) {
       return (

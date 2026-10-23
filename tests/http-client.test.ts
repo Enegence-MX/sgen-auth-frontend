@@ -4,6 +4,19 @@ import { json, denied, serialLock } from './fixtures'
 const base = 'http://localhost:3000/api/v1'
 
 describe('cookie session transport', () => {
+  it('preserves successful HTTP status codes for contract discriminators', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(json({ data: { csrfToken: 'csrf' } }))
+      .mockResolvedValueOnce(json({ data: { mfaRequired: true } }, 202))
+    const http = createHttpClient(base, fetcher, serialLock())
+    await expect(
+      http.exchange('/auth/login', {
+        method: 'POST',
+        authenticated: false,
+      }),
+    ).resolves.toMatchObject({ status: 202, body: { data: { mfaRequired: true } } })
+  })
   it('sends credentials and fresh CSRF on login, without bearer tokens', async () => {
     const fetcher = vi
       .fn<typeof fetch>()

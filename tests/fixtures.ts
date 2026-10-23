@@ -31,17 +31,17 @@ export function tenantSession(id = alpha): Session {
       },
     },
     permissions: [
-      { module: 'SEGURIDAD', code: 'MANAGE_USERS' },
-      { module: 'ORGANIZATIONS', code: 'MANAGE_SECURITY_POLICIES' },
+      { module: 'SECURITY', code: 'MANAGE_USERS' },
+      { module: 'SECURITY', code: 'MANAGE_SECURITY_POLICIES' },
     ],
   }
 }
 export const organization = (id: string, name: string, rfc = 'AAA010101AA1'): Organization => ({
   id,
-  razonSocial: name,
-  rfcMaestro: rfc,
-  sectorIndustrial: null,
-  domicilioFiscal: null,
+  legalName: name,
+  rfc,
+  industrySector: null,
+  taxAddress: null,
   active: true,
   createdAt: '2026-10-07T12:00:00.000Z',
   updatedAt: '2026-10-07T12:00:00.000Z',
@@ -88,10 +88,12 @@ export function fixture(
     passwordChangeError?: string
     shared?: boolean
     mfaLogin?: boolean
+    mfaExpiresAt?: string
     invitation?: Partial<InvitationDetails>
   } = {},
 ) {
   let session = options.initial
+  let pendingMfaSession: Session | undefined
   const rows = [
     organization(alpha, 'Development Alpha'),
     organization(beta, 'Development Beta', 'BBB010101BB1'),
@@ -119,10 +121,13 @@ export function fixture(
       return denied(
         'TENANT_SELECTION_REQUIRED',
         409,
-        rows.map((row) => ({ tenantId: row.id, legalName: row.razonSocial })),
+        rows.map((row) => ({ tenantId: row.id, legalName: row.legalName })),
       )
-    session = options.shared ? tenantSession(body.tenantId) : (options.loginAs ?? platform)
+    const loginSession = options.shared
+      ? tenantSession(body.tenantId)
+      : (options.loginAs ?? platform)
     if (options.mfaLogin) {
+      pendingMfaSession = loginSession
       return json(
         {
           data: {
@@ -130,12 +135,14 @@ export function fixture(
             method: 'EMAIL',
             challengeToken: 'test_mfa_challenge_token_123456',
             sentTo: 'p*****@example.test',
-            expiresAt: '2026-10-30T12:00:00.000Z',
+            expiresAt:
+              options.mfaExpiresAt ?? new Date(Date.now() + 5 * 60_000).toISOString(),
           },
         },
         202,
       )
     }
+    session = loginSession
     return json({
       data: { ...session, csrfToken: 'session-csrf', expiresIn: 600 },
     })
@@ -188,15 +195,18 @@ export function fixture(
     session = undefined
     return json({ data: { success: true } })
   }
+  function verifyMfa(body: Record<string, unknown>): Response {
+    if (body.code !== '123456') return denied('INVALID_MFA_CODE', 401)
+    session = pendingMfaSession
+    pendingMfaSession = undefined
+    return json({ data: { success: true } })
+  }
   const fetcher = vi.fn<typeof fetch>(async (input, init) => {
     const url = new URL(String(input))
     const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {}
     if (url.pathname.endsWith('/auth/csrf')) return json({ data: { csrfToken: 'test-csrf' } })
     if (url.pathname.endsWith('/auth/login')) return login(body as Record<string, string>)
-    if (url.pathname.endsWith('/auth/mfa/verify'))
-      return body.code === '123456'
-        ? json({ data: { success: true } })
-        : denied('INVALID_MFA_CODE', 401)
+    if (url.pathname.endsWith('/auth/mfa/verify')) return verifyMfa(body)
     const publicInvitation = publicInvitationResponse(url.pathname, body)
     if (publicInvitation) return publicInvitation
     if (url.pathname.endsWith('/auth/refresh'))
@@ -250,8 +260,8 @@ function organizationResponse(
   const search = url.searchParams.get('search')?.toLowerCase() ?? ''
   const filtered = rows.filter(
     (row) =>
-      row.razonSocial.toLowerCase().includes(search) ||
-      row.rfcMaestro.toLowerCase().includes(search),
+      row.legalName.toLowerCase().includes(search) ||
+      row.rfc.toLowerCase().includes(search),
   )
   const page = Number(url.searchParams.get('page') ?? 1)
   const pageSize = Number(url.searchParams.get('pageSize') ?? 25)
@@ -288,29 +298,20 @@ function securityPolicyResponse(
 }
 function createOrganization(rows: Organization[], body: Record<string, unknown>): Response {
   const rfc = typeof body.rfc === 'string' ? body.rfc : ''
-  if (rows.some((row) => row.rfcMaestro === rfc)) return denied('DUPLICATE_RECORD', 409)
-  const item = {
+  if (rows.some((row) => row.rfc === rfc)) return denied('DUPLICATE_RECORD', 409)
+  const item: Organization = {
     ...organization(
       '00000000-0000-4000-8000-000000000013',
       typeof body.legalName === 'string' ? body.legalName : '',
       rfc,
     ),
-    sectorIndustrial: typeof body.industrySector === 'string' ? body.industrySector : null,
-    domicilioFiscal: typeof body.taxAddress === 'string' ? body.taxAddress : null,
+    industrySector: typeof body.industrySector === 'string' ? body.industrySector : null,
+    taxAddress: typeof body.taxAddress === 'string' ? body.taxAddress : null,
   }
   rows.push(item)
-  return json({ data: backendOrganization(item) }, 201)
+  return json({ data: item }, 201)
 }
 
 function backendOrganization(item: Organization) {
-  return {
-    id: item.id,
-    legalName: item.razonSocial,
-    rfc: item.rfcMaestro,
-    industrySector: item.sectorIndustrial,
-    taxAddress: item.domicilioFiscal,
-    active: item.active,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-  }
+  return item
 }

@@ -5,3 +5,14 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 export interface Envelope<T> {
   data: T
 }
+
+export interface PageMeta {
+  page: number
+  pageSize: number
+  total: number
+}
+
+export interface Page<T> {
+  data: T[]
+  meta: PageMeta
+}
