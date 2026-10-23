@@ -419,5 +419,32 @@ describe('current backend flows', () => {
     })
     expect(await screen.findByText('Suspendida')).toBeInTheDocument()
   })
+  it('counts down the MFA challenge and returns to the password step when it expires', async () => {
+    const user = userEvent.setup()
+    render(fixture({ mfaLogin: true, mfaExpiresInMs: 1500 }).services)
+    await signIn(user)
+    expect(await screen.findByText(/El código vence en 0:0[0-2]/)).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByLabelText('Contraseña')).toBeInTheDocument(), { timeout: 3000 })
+    expect(screen.queryByLabelText('Código de verificación')).not.toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('La solicitud de verificación venció.')
+  })
+  it('creates an organization without required MFA when the switch is off', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: platform })
+    render(setup.services, '/organizations/new')
+    await user.type(await screen.findByLabelText('Razón social'), 'Optional MFA Organization')
+    await user.type(screen.getByLabelText('RFC maestro'), 'DDD010101DD1')
+    const mfa = screen.getByRole('switch', { name: 'Exigir MFA' })
+    expect(mfa).toBeChecked()
+    await user.click(mfa)
+    await user.click(screen.getByRole('button', { name: 'Crear organización' }))
+    await screen.findByRole('heading', { name: 'Optional MFA Organization' })
+    const create = setup.fetcher.mock.calls.find(([url, init]) => String(url).endsWith('/organizations') && init?.method === 'POST')
+    expect(JSON.parse(String(create?.[1]?.body))).toEqual({
+      legalName: 'Optional MFA Organization',
+      rfc: 'DDD010101DD1',
+      mfaRequired: false,
+    })
+  })
 })
 

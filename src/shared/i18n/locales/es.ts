@@ -76,6 +76,7 @@ export const es = {
     signingOut: 'Cerrando sesión…',
     mfaAttemptsLeft_one: 'Te queda {{count}} intento.',
     mfaAttemptsLeft_other: 'Te quedan {{count}} intentos.',
+    mfaExpiresIn: 'El código vence en {{time}}.',
     platform: 'Administración de plataforma',
     tenant: 'Acceso de organización',
   },
@@ -157,7 +158,7 @@ export const es = {
     noData: 'Sin especificar',
     createHint: 'Registra la organización y su política de seguridad inicial.',
     createLimit:
-      'Después de crear esta organización, selecciónala en la Consola de seguridad para invitar a su primer administrador. Las organizaciones nuevas requieren MFA al iniciar sesión.',
+      'Después de crear esta organización, selecciónala en la Consola de seguridad para invitar a su primer administrador.',
     save: 'Crear organización',
     saving: 'Creando…',
     created: 'Organización creada correctamente.',

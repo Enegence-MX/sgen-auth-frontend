@@ -2,7 +2,8 @@ import { useState, type SubmitEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation } from 'react-router'
 import { mfaAttemptsLeft, tenantChoices, type TenantChoice } from '../../features/auth/model/session'
-import { hasCode } from '../../shared/api/errors'
+import { ApiError, hasCode } from '../../shared/api/errors'
+import { formatCountdown, useCountdown } from '../hooks/use-countdown'
 import type { MfaChallenge } from '../../features/auth/model/mfa-challenge'
 import { Spinner } from '../../shared/ui/Loading'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
@@ -25,6 +26,13 @@ export function AuthPage() {
   const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge>()
   const [mfaCode, setMfaCode] = useState('')
   const [showPwd, setShowPwd] = useState(false)
+
+  const mfaTimeLeft = useCountdown(step === 'mfa' ? mfaChallenge?.expiresAt : undefined, () => {
+    setMfaChallenge(undefined)
+    setMfaCode('')
+    setStep('password')
+    setError(new ApiError(401, 'MFA_CHALLENGE_INVALID'))
+  })
 
   const handleContinueEmail = () => {
     if (!credentials.email.trim()) return
@@ -116,6 +124,7 @@ export function AuthPage() {
             tenantId={tenantId}
             mfaChallenge={mfaChallenge}
             mfaCode={mfaCode}
+            mfaTimeLeft={mfaTimeLeft === undefined ? undefined : formatCountdown(mfaTimeLeft)}
             busy={busy}
             showPassword={showPwd}
             actionLabel={actionLabel}

@@ -135,6 +135,7 @@ export function fixture(
     passwordChangeError?: string
     shared?: boolean
     mfaLogin?: boolean
+    mfaExpiresInMs?: number
     invitation?: Partial<InvitationDetails>
   } = {},
 ) {
@@ -190,7 +191,7 @@ export function fixture(
             method: 'EMAIL',
             challengeToken: 'test_mfa_challenge_token_123456',
             sentTo: 'p*****@example.test',
-            expiresAt: '2026-10-30T12:00:00.000Z',
+            expiresAt: new Date(Date.now() + (options.mfaExpiresInMs ?? 600_000)).toISOString(),
           },
         },
         202,

@@ -5,6 +5,7 @@ import { useServices, useSession } from '../services/services-context'
 import { isPlatform } from '../../features/auth/model/session'
 import { TextField } from '../../shared/ui/TextField'
 import { TextArea } from '../../shared/ui/TextArea'
+import { Switch } from '../../shared/ui/Switch'
 import { Button } from '../../shared/ui/Button'
 import { Notice } from '../../shared/ui/Notice'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
@@ -24,6 +25,7 @@ export function NewOrganizationPage() {
     industrySector: '',
     taxAddress: '',
   })
+  const [mfaRequired, setMfaRequired] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>()
   function change(key: keyof typeof fields, value: string) {
@@ -39,6 +41,7 @@ export function NewOrganizationPage() {
         rfc: fields.rfc.trim().toUpperCase(),
         ...(fields.industrySector.trim() ? { industrySector: fields.industrySector.trim() } : {}),
         ...(fields.taxAddress.trim() ? { taxAddress: fields.taxAddress.trim() } : {}),
+        mfaRequired,
       })
       await navigate(`/organizations/${item.id}`, { replace: true, state: { created: true } })
     } catch (failure) {
@@ -88,6 +91,13 @@ export function NewOrganizationPage() {
               rows={3}
               autoComplete="street-address"
             />
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="m-0 font-semibold text-ink">{t('securityConsole.mfaRequired')}</p>
+                <p className="mt-1 mb-0 text-sm text-body">{t('securityConsole.mfaRequiredHint')}</p>
+              </div>
+              <Switch label={t('securityConsole.mfaRequired')} hideLabel checked={mfaRequired} onChange={(event) => setMfaRequired(event.target.checked)} />
+            </div>
             <Notice>{t('organizations.createLimit')}</Notice>
             <div className="mt-6 flex flex-wrap items-center gap-3 border-0 border-t border-solid border-line pt-6">
               <Button type="submit" loading={busy}>{busy ? t('organizations.saving') : t('organizations.save')}</Button>
