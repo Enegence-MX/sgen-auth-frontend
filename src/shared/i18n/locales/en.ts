@@ -143,6 +143,7 @@ export const en = {
     empty: 'No organizations found.',
     view: 'View details',
     legalName: 'Legal name',
+    invalidField: 'Check this field.',
     taxId: 'Master RFC',
     sector: 'Industry sector',
     address: 'Fiscal address',
@@ -191,6 +192,8 @@ export const en = {
     noOrganizations: 'There are no organizations available to view.',
     platformPolicyReadOnly:
       'Platform administration can view this policy. To change it, sign in as an administrator of that organization.',
+    policyPermissionRequired:
+      'Your session does not have the MANAGE_SECURITY_POLICIES permission to change this policy.',
     policies: 'Security policies',
     providers: 'Identity providers',
     users: 'Users and roles',

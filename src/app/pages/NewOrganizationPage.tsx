@@ -13,6 +13,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Card } from '../../shared/ui/Card'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { LinkButton } from '../../shared/ui/LinkButton'
+import { invalidFields } from '../../shared/api/errors'
 
 export function NewOrganizationPage() {
   const { t } = useTranslation()
@@ -28,6 +29,7 @@ export function NewOrganizationPage() {
   const [mfaRequired, setMfaRequired] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>()
+  const invalid = new Set(invalidFields(error))
   function change(key: keyof typeof fields, value: string) {
     setFields((current) => ({ ...current, [key]: value }))
   }
@@ -63,6 +65,7 @@ export function NewOrganizationPage() {
               label={t('organizations.legalName')}
               value={fields.legalName}
               onChange={(event) => change('legalName', event.target.value)}
+              error={invalid.has('legalName') ? t('organizations.invalidField') : undefined}
               required
               maxLength={255}
               autoComplete="organization"
@@ -71,6 +74,7 @@ export function NewOrganizationPage() {
               label={t('organizations.taxId')}
               value={fields.rfc}
               onChange={(event) => change('rfc', event.target.value.toUpperCase())}
+              error={invalid.has('rfc') ? t('organizations.invalidField') : undefined}
               required
               minLength={12}
               maxLength={13}
@@ -80,6 +84,7 @@ export function NewOrganizationPage() {
               label={`${t('organizations.sector')} (${t('organizations.optional')})`}
               value={fields.industrySector}
               onChange={(event) => change('industrySector', event.target.value)}
+              error={invalid.has('industrySector') ? t('organizations.invalidField') : undefined}
               maxLength={150}
             />
             <TextArea
@@ -87,6 +92,7 @@ export function NewOrganizationPage() {
               id="fiscal-address"
               value={fields.taxAddress}
               onChange={(event) => change('taxAddress', event.target.value)}
+              error={invalid.has('taxAddress') ? t('organizations.invalidField') : undefined}
               maxLength={4000}
               rows={3}
               autoComplete="street-address"

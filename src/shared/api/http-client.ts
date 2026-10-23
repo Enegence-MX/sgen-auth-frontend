@@ -8,8 +8,14 @@ interface RequestOptions {
   authenticated?: boolean
   signal?: AbortSignal
 }
+export interface HttpResponse<T> {
+  status: number
+  body: T
+}
 export interface HttpClient {
   request<T>(path: string, options?: RequestOptions): Promise<T>
+  /** Same as request, but keeps the HTTP status for contracts that distinguish 200 from 202. */
+  exchange<T>(path: string, options?: RequestOptions): Promise<HttpResponse<T>>
   refresh(force?: boolean): Promise<void>
   onSessionExpired(handler: () => void): void
   onPasswordChangeRequired(handler: () => void): void
@@ -26,7 +32,7 @@ export function createHttpClient(
   let passwordChangeRequired = () => {}
   let permissionsChanged = () => {}
 
-  async function send<T>(path: string, options: RequestOptions = {}, csrf?: string): Promise<T> {
+  async function send<T>(path: string, options: RequestOptions = {}, csrf?: string): Promise<HttpResponse<T>> {
     const response = await fetcher(`${baseUrl}${path}`, {
       method: options.method ?? 'GET',
       credentials: 'include',
@@ -45,17 +51,17 @@ export function createHttpClient(
       throw error
     }
     if (!isRecord(body) || !('data' in body)) throw new ApiError(502, 'INVALID_RESPONSE')
-    return body as T
+    return { status: response.status, body: body as T }
   }
 
   async function csrfToken(): Promise<string> {
     // Obtain the current cookie-bound value inside the cross-tab lock, never persist it.
-    const csrf = await send<{ data: { csrfToken: string } }>('/auth/csrf')
+    const { body: csrf } = await send<{ data: { csrfToken: string } }>('/auth/csrf')
     if (typeof csrf.data.csrfToken !== 'string') throw new ApiError(502, 'INVALID_RESPONSE')
     return csrf.data.csrfToken
   }
 
-  async function mutation<T>(path: string, options: RequestOptions): Promise<T> {
+  async function mutation<T>(path: string, options: RequestOptions): Promise<HttpResponse<T>> {
     try {
       return await send<T>(path, options, await csrfToken())
     } catch (error) {
@@ -94,26 +100,31 @@ export function createHttpClient(
     return refreshing
   }
 
+  async function exchange<T>(path: string, options: RequestOptions = {}): Promise<HttpResponse<T>> {
+    try {
+      return await invoke<T>(path, options)
+    } catch (error) {
+      if (options.authenticated === false || !isUnauthorized(error)) throw error
+    }
+    await refresh()
+    try {
+      return await invoke<T>(path, options)
+    } catch (error) {
+      if (isUnauthorized(error)) expired()
+      throw error
+    }
+  }
+
   return {
     refresh,
     onSessionExpired(handler) {
       expired = handler
     },
     onPasswordChangeRequired(handler) { passwordChangeRequired = handler },
+    exchange,
     onPermissionsChanged(handler) { permissionsChanged = handler },
     async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-      try {
-        return await invoke<T>(path, options)
-      } catch (error) {
-        if (options.authenticated === false || !isUnauthorized(error)) throw error
-      }
-      await refresh()
-      try {
-        return await invoke<T>(path, options)
-      } catch (error) {
-        if (isUnauthorized(error)) expired()
-        throw error
-      }
+      return (await exchange<T>(path, options)).body
     },
   }
 }

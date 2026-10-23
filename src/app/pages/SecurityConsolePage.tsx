@@ -32,6 +32,7 @@ import { Tabs } from '../../shared/ui/Tabs'
 import { TextField } from '../../shared/ui/TextField'
 import type { SecurityPolicy, SecurityPolicyChanges } from '../../features/organizations/model/organization'
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../features/passwords/model/password-policy'
+import { hasPermission } from '../../features/auth/model/permissions'
 
 const policyFieldClassName = 'grid grid-cols-1 items-center gap-x-4 gap-y-2 [&>label]:mb-0 [&_input]:mb-0 [&_select]:mb-0 [&>p]:mb-0 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,0.65fr)] sm:[&>label]:col-start-1 sm:[&>label]:row-start-1 sm:[&>input]:col-start-2 sm:[&>input]:row-start-1 sm:[&>div]:col-start-2 sm:[&>div]:row-start-1 sm:[&>p]:col-span-2 sm:[&>p]:row-start-2'
 
@@ -102,7 +103,10 @@ export function SecurityConsolePage() {
   const policyValues = policyBase ? { ...policyBase, ...draft } : undefined
   if (session.status !== 'authenticated') return null
 
-  const canInvite = isPlatform || session.session.permissions.some((permission) => permission.code === 'MANAGE_USERS')
+  const canInvite =
+    isPlatform || hasPermission(session.session, 'MANAGE_USERS', 'SECURITY')
+  const canManagePolicy =
+    !isPlatform && hasPermission(session.session, 'MANAGE_SECURITY_POLICIES', 'SECURITY')
   const markUnsaved = () => {
     setSaved(false)
   }
@@ -110,7 +114,7 @@ export function SecurityConsolePage() {
     field: K,
     value: SecurityPolicyChanges[K],
   ) {
-    if (!organizationId) return
+    if (!organizationId || !canManagePolicy) return
     setPolicyDraft((current) => ({
       organizationId,
       changes: {
@@ -136,7 +140,7 @@ export function SecurityConsolePage() {
 
   async function savePolicies(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!organizationId || !policyBase || isPlatform) return
+    if (!organizationId || !policyBase || !canManagePolicy) return
     const changes: Partial<SecurityPolicyChanges> = Object.fromEntries(
       Object.entries(draft).filter(([key, value]) => policyBase[key as keyof SecurityPolicyChanges] !== value),
     )
@@ -216,12 +220,16 @@ export function SecurityConsolePage() {
             <h2 className="m-0 font-heading text-xl font-semibold text-ink">{t('securityConsole.policies')}</h2>
             <p className="mt-2 mb-0 text-sm text-body">{t('securityConsole.policyDescription')}</p>
           </div>
-          <Button type="submit" loading={savingPolicy} disabled={isPlatform}>
+          <Button type="submit" loading={savingPolicy} disabled={!canManagePolicy}>
             <Check size={17} aria-hidden="true" />
             {savingPolicy ? t('app.loading') : t('securityConsole.save')}
           </Button>
         </div>
-        {isPlatform && <Notice variant="warning">{t('securityConsole.platformPolicyReadOnly')}</Notice>}
+        {!canManagePolicy && (
+          <Notice variant="warning">
+            {t(isPlatform ? 'securityConsole.platformPolicyReadOnly' : 'securityConsole.policyPermissionRequired')}
+          </Notice>
+        )}
         {policySaveError !== undefined && <ErrorNotice error={policySaveError} />}
 
         <Card>
@@ -261,8 +269,11 @@ export function SecurityConsolePage() {
                   min={PASSWORD_MIN_LENGTH}
                   max={PASSWORD_MAX_LENGTH}
                   label={t('securityConsole.minimumLength')}
-                  disabled={isPlatform}
-                  hint={t('password.length', { min: PASSWORD_MIN_LENGTH, max: PASSWORD_MAX_LENGTH })}
+                  disabled={!canManagePolicy}
+                  hint={t('password.length', {
+                    min: PASSWORD_MIN_LENGTH,
+                    max: PASSWORD_MAX_LENGTH,
+                  })}
                   value={policyValues.passwordMinLength}
                   onChange={(event) => updateNumber((value) => updatePolicy('passwordMinLength', value), event.target.value, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)}
                 />
@@ -273,7 +284,7 @@ export function SecurityConsolePage() {
                   label={t('password.noExpiry')}
                   hideLabel
                   checked={policyValues.passwordExpiryDays === null}
-                  disabled={isPlatform}
+                  disabled={!canManagePolicy}
                   onChange={(event) => updatePolicy('passwordExpiryDays', event.target.checked ? null : DEFAULT_EXPIRY_DAYS)}
                 />
               </div>
@@ -283,7 +294,7 @@ export function SecurityConsolePage() {
                   min={1}
                   max={MAX_EXPIRY_DAYS}
                   label={`${t('securityConsole.passwordExpiry')} (${t('securityConsole.days')})`}
-                  disabled={isPlatform || policyValues.passwordExpiryDays === null}
+                  disabled={!canManagePolicy || policyValues.passwordExpiryDays === null}
                   value={policyValues.passwordExpiryDays ?? ''}
                   onChange={(event) => updateNumber((value) => updatePolicy('passwordExpiryDays', value), event.target.value, 1, MAX_EXPIRY_DAYS)}
                 />
@@ -309,7 +320,7 @@ export function SecurityConsolePage() {
                 label={t('securityConsole.mfaRequired')}
                 hideLabel
                 checked={policyValues.mfaRequired}
-                disabled={isPlatform}
+                disabled={!canManagePolicy}
                 onChange={(event) => updatePolicy('mfaRequired', event.target.checked)}
               />
             </div>
@@ -346,22 +357,22 @@ export function SecurityConsolePage() {
           <Card>
             <h3 className="m-0 mb-4 font-heading text-base font-semibold text-ink">{t('securityConsole.sessionControls')}</h3>
             <div className="grid min-w-0 grid-cols-1 gap-4">
-              <div className={policyFieldClassName}><TextField type="number" min={1} max={720} label={`${t('securityConsole.maximumSession')} (${t('securityConsole.hours')})`} value={policyValues.sessionMaxHours} disabled={isPlatform} onChange={(event) => updateNumber((value) => { updatePolicy('sessionMaxHours', value); if (policyValues.idleTimeoutMinutes > value * 60) updatePolicy('idleTimeoutMinutes', Math.min(480, value * 60)) }, event.target.value, 1, 720)} /></div>
-              <div className={policyFieldClassName}><TextField type="number" min={5} max={Math.min(480, policyValues.sessionMaxHours * 60)} label={`${t('securityConsole.idleTimeout')} (${t('securityConsole.minutes')})`} value={policyValues.idleTimeoutMinutes} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('idleTimeoutMinutes', value), event.target.value, 5, Math.min(480, policyValues.sessionMaxHours * 60))} /></div>
-              <div className={policyFieldClassName}><TextField type="number" min={1} max={20} label={t('securityConsole.concurrentSessions')} value={policyValues.maxConcurrentSessions} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('maxConcurrentSessions', value), event.target.value, 1, 20)} /></div>
-              <div className={policyFieldClassName}><TextField type="number" min={1} max={720} label={`${t('securityConsole.invitationExpiry')} (${t('securityConsole.hours')})`} value={policyValues.invitationExpiryHours} disabled={isPlatform} onChange={(event) => updateNumber((value) => updatePolicy('invitationExpiryHours', value), event.target.value, 1, 720)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={720} label={`${t('securityConsole.maximumSession')} (${t('securityConsole.hours')})`} value={policyValues.sessionMaxHours} disabled={!canManagePolicy} onChange={(event) => updateNumber((value) => { updatePolicy('sessionMaxHours', value); if (policyValues.idleTimeoutMinutes > value * 60) updatePolicy('idleTimeoutMinutes', Math.min(480, value * 60)) }, event.target.value, 1, 720)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={5} max={Math.min(480, policyValues.sessionMaxHours * 60)} label={`${t('securityConsole.idleTimeout')} (${t('securityConsole.minutes')})`} value={policyValues.idleTimeoutMinutes} disabled={!canManagePolicy} onChange={(event) => updateNumber((value) => updatePolicy('idleTimeoutMinutes', value), event.target.value, 5, Math.min(480, policyValues.sessionMaxHours * 60))} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={20} label={t('securityConsole.concurrentSessions')} value={policyValues.maxConcurrentSessions} disabled={!canManagePolicy} onChange={(event) => updateNumber((value) => updatePolicy('maxConcurrentSessions', value), event.target.value, 1, 20)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={720} label={`${t('securityConsole.invitationExpiry')} (${t('securityConsole.hours')})`} value={policyValues.invitationExpiryHours} disabled={!canManagePolicy} onChange={(event) => updateNumber((value) => updatePolicy('invitationExpiryHours', value), event.target.value, 1, 720)} /></div>
             </div>
           </Card>
           <Card>
             <h3 className="m-0 mb-4 font-heading text-base font-semibold text-ink">{t('securityConsole.accountLockout')}</h3>
             <div className="mb-4 flex items-center justify-between gap-4">
               <p className="m-0 font-semibold text-ink">{t('securityConsole.lockoutEnabled')}</p>
-              <Switch label={t('securityConsole.lockoutEnabled')} hideLabel checked={policyValues.lockoutEnabled} disabled={isPlatform} onChange={(event) => updatePolicy('lockoutEnabled', event.target.checked)} />
+              <Switch label={t('securityConsole.lockoutEnabled')} hideLabel checked={policyValues.lockoutEnabled} disabled={!canManagePolicy} onChange={(event) => updatePolicy('lockoutEnabled', event.target.checked)} />
             </div>
             <div className="grid min-w-0 grid-cols-1 gap-4">
-              <div className={policyFieldClassName}><TextField type="number" min={3} max={20} label={t('securityConsole.maxAttempts')} value={policyValues.maxLoginAttempts} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('maxLoginAttempts', value), event.target.value, 3, 20)} /></div>
-              <div className={policyFieldClassName}><TextField type="number" min={1} max={1440} label={`${t('securityConsole.attemptWindow')} (${t('securityConsole.minutes')})`} value={policyValues.attemptWindowSeconds / 60} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('attemptWindowSeconds', value * 60), event.target.value, 1, 1440)} /></div>
-              <div className={policyFieldClassName}><TextField type="number" min={1} max={1440} label={`${t('securityConsole.lockoutDuration')} (${t('securityConsole.minutes')})`} value={policyValues.lockoutDurationMinutes} disabled={isPlatform || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('lockoutDurationMinutes', value), event.target.value, 1, 1440)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={3} max={20} label={t('securityConsole.maxAttempts')} value={policyValues.maxLoginAttempts} disabled={!canManagePolicy || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('maxLoginAttempts', value), event.target.value, 3, 20)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={1440} label={`${t('securityConsole.attemptWindow')} (${t('securityConsole.minutes')})`} value={policyValues.attemptWindowSeconds / 60} disabled={!canManagePolicy || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('attemptWindowSeconds', value * 60), event.target.value, 1, 1440)} /></div>
+              <div className={policyFieldClassName}><TextField type="number" min={1} max={1440} label={`${t('securityConsole.lockoutDuration')} (${t('securityConsole.minutes')})`} value={policyValues.lockoutDurationMinutes} disabled={!canManagePolicy || !policyValues.lockoutEnabled} onChange={(event) => updateNumber((value) => updatePolicy('lockoutDurationMinutes', value), event.target.value, 1, 1440)} /></div>
             </div>
           </Card>
         </div>

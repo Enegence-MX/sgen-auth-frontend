@@ -56,7 +56,7 @@ export function tenantSession(id = alpha): Session {
     },
     permissions: [
       { module: 'SECURITY', code: 'MANAGE_USERS' },
-      { module: 'ORGANIZATIONS', code: 'MANAGE_SECURITY_POLICIES' },
+      { module: 'SECURITY', code: 'MANAGE_SECURITY_POLICIES' },
       { module: 'CONFIGURATION', code: 'MANAGE_ORGANIZATION_PROFILE' },
     ],
   }

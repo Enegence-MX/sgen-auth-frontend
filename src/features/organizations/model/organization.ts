@@ -1,3 +1,5 @@
+import type { Page } from '../../../shared/api/response'
+
 export interface Organization {
   id: string
   legalName: string
@@ -38,10 +40,7 @@ export interface SecurityPolicy {
   updatedAt: string
 }
 export type SecurityPolicyChanges = Omit<SecurityPolicy, 'organizationId' | 'mfaAllowedMethods' | 'updatedAt'>
-export interface OrganizationList {
-  data: Organization[]
-  meta: { page: number; pageSize: number; total: number }
-}
+export type OrganizationList = Page<Organization>
 export interface SecurityOrganizationOption {
   id: string
   name: string

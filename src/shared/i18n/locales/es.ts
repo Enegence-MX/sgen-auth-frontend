@@ -148,6 +148,7 @@ export const es = {
     empty: 'No se encontraron organizaciones.',
     view: 'Ver detalle',
     legalName: 'Razón social',
+    invalidField: 'Revisa este campo.',
     taxId: 'RFC maestro',
     sector: 'Sector industrial',
     address: 'Domicilio fiscal',
@@ -197,6 +198,8 @@ export const es = {
     noOrganizations: 'No hay organizaciones disponibles para consultar.',
     platformPolicyReadOnly:
       'Administración de plataforma: puedes consultar la política. Para modificarla, inicia sesión como administrador de esa organización.',
+    policyPermissionRequired:
+      'Tu sesión no tiene el permiso MANAGE_SECURITY_POLICIES para modificar esta política.',
     policies: 'Políticas de seguridad',
     providers: 'Proveedores de identidad',
     users: 'Usuarios y roles',

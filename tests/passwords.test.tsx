@@ -175,4 +175,3 @@ describe('password change flows', () => {
     expect(setup.services.auth.getSnapshot().status).toBe('authenticated')
   })
 })
-

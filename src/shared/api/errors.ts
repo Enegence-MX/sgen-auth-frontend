@@ -39,6 +39,14 @@ export function validationMessages(error: unknown): string[] {
   return error.details.filter((item: unknown): item is string => typeof item === 'string')
 }
 
+/** Nest's ValidationPipe reports each invalid property as a message that starts with its name. */
+export function invalidFields(error: unknown): string[] {
+  const fields = validationMessages(error)
+    .map((message) => message.split(' ', 1)[0] ?? '')
+    .filter(Boolean)
+  return [...new Set(fields)]
+}
+
 export function numericDetail(error: unknown, code: string, field: string): number | undefined {
   if (!hasCode(error, code) || !isRecord(error.details)) return undefined
   const value = error.details[field]

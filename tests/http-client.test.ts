@@ -4,6 +4,23 @@ import { json, denied, serialLock } from './fixtures'
 const base = 'http://localhost:3000/api/v1'
 
 describe('cookie session transport', () => {
+  it('preserves HTTP 202 after retrying an expired CSRF token during login', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(json({ data: { csrfToken: 'csrf' } }))
+      .mockResolvedValueOnce(denied('CSRF_INVALID', 403))
+      .mockResolvedValueOnce(json({ data: { csrfToken: 'fresh-csrf' } }))
+      .mockResolvedValueOnce(json({ data: { mfaRequired: true } }, 202))
+    const http = createHttpClient(base, fetcher, serialLock())
+    await expect(
+      http.exchange('/auth/login', {
+        method: 'POST',
+        authenticated: false,
+      }),
+    ).resolves.toMatchObject({ status: 202, body: { data: { mfaRequired: true } } })
+    expect(fetcher).toHaveBeenCalledTimes(4)
+    expect(fetcher.mock.calls[3]?.[1]?.headers).toHaveProperty('X-CSRF-Token', 'fresh-csrf')
+  })
   it('sends credentials and fresh CSRF on login, without bearer tokens', async () => {
     const fetcher = vi
       .fn<typeof fetch>()

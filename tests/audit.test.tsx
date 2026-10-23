@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { render } from './render'
-import { fixture, organization, tenantSession } from './fixtures'
+import { fixture, organization, platform, tenantSession } from './fixtures'
 import type { AuditEvent } from '../src/features/audit/api/audit-api'
 
 const tenantId = 'c670858e-4754-4d6c-9d12-31f94503a8f7'
@@ -35,6 +35,18 @@ async function openAudit() {
   return user
 }
 describe('audit query view', () => {
+  it('allows platform audit access without a tenant permission', async () => {
+    const result = fixture({ initial: platform })
+    const list = vi.spyOn(result.services.audit, 'list').mockResolvedValue({
+      data: [event], meta: { page: 1, pageSize: 25, total: 1 },
+    })
+    vi.spyOn(result.services.audit, 'catalog').mockResolvedValue([])
+    render(result.services, '/security')
+    await openAudit()
+    expect(await screen.findByRole('table')).toBeInTheDocument()
+    expect(list).toHaveBeenCalledWith(1, { tenantId: undefined }, expect.any(AbortSignal))
+    expect(screen.queryByText('Tu rol no tiene permiso para consultar la auditoría.')).not.toBeInTheDocument()
+  })
   it('loads permitted events, applies UTC filters, paginates and shows safe details', async () => {
     const result = setup()
     const user = await openAudit()
@@ -115,4 +127,3 @@ describe('audit query view', () => {
     expect(within(await screen.findByRole('dialog')).getByText('Falta de pago')).toBeInTheDocument()
   })
 })
-

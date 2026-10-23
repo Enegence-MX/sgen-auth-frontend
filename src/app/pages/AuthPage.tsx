@@ -48,6 +48,14 @@ export function AuthPage() {
     setBusy(true)
     setError(undefined)
     if (step === 'mfa' && mfaChallenge) {
+      if (Date.parse(mfaChallenge.expiresAt) <= Date.now()) {
+        setMfaChallenge(undefined)
+        setMfaCode('')
+        setStep('password')
+        setError(new ApiError(401, 'MFA_CHALLENGE_INVALID'))
+        setBusy(false)
+        return
+      }
       try {
         await auth.verifyMfa(mfaChallenge.challengeToken, mfaCode)
         setMfaChallenge(undefined)
