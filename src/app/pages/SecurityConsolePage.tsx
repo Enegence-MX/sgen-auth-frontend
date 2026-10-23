@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useServices, useSession } from '../services/services-context'
+import { isPlatform as isPlatformSession } from '../../features/auth/model/session'
 import { useResource } from '../hooks/use-resource'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
@@ -53,8 +54,7 @@ export function SecurityConsolePage() {
     setSupportOpen: (open: boolean) => void
   }>()
   const isPlatform =
-    session.status === 'authenticated' &&
-    session.session.context.accessMode === 'PLATFORM_SUPERADMIN'
+    session.status === 'authenticated' && isPlatformSession(session.session)
   const [selectedOrganizationId, setSelectedOrganizationId] = useState('')
   const loadOrganizationOptions = useCallback(
     (signal: AbortSignal) =>

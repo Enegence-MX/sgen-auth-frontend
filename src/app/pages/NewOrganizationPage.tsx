@@ -2,6 +2,7 @@ import { useState, type SubmitEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../services/services-context'
+import { isPlatform } from '../../features/auth/model/session'
 import { TextField } from '../../shared/ui/TextField'
 import { TextArea } from '../../shared/ui/TextArea'
 import { Button } from '../../shared/ui/Button'
@@ -47,7 +48,7 @@ export function NewOrganizationPage() {
     }
   }
   if (state.status !== 'authenticated') return null
-  if (state.session.context.accessMode !== 'PLATFORM_SUPERADMIN') return <Navigate to="/organizations" replace />
+  if (!isPlatform(state.session)) return <Navigate to="/organizations" replace />
   return (
     <section className="grid max-w-3xl gap-6">
       <Link to="/organizations" className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold no-underline hover:underline"><ArrowLeft size={16} aria-hidden="true" />{t('app.back')}</Link>

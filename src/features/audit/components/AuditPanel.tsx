@@ -1,6 +1,7 @@
 import { useCallback, useState, type SubmitEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../../../app/services/services-context'
+import { isPlatform } from '../../auth/model/session'
 import { useResource } from '../../../app/hooks/use-resource'
 import { Card } from '../../../shared/ui/Card'
 import { Button } from '../../../shared/ui/Button'
@@ -22,7 +23,7 @@ export function AuditPanel({ tenantId }: Readonly<{ tenantId?: string }>) {
   const session = useSession()
   const { t } = useTranslation()
   if (session.status !== 'authenticated') return null
-  const allowed = session.session.context.accessMode === 'PLATFORM_SUPERADMIN'
+  const allowed = isPlatform(session.session)
     || session.session.permissions.some((permission) => permission.code === 'VIEW_SECURITY_AUDIT')
   if (!allowed) return <Notice>{t('audit.denied')}</Notice>
   return <AuditResults key={tenantId ?? 'current'} tenantId={tenantId} />

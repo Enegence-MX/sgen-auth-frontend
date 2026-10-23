@@ -2,6 +2,7 @@ import { useCallback, useState, type SubmitEvent } from 'react'
 import { Link, Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../services/services-context'
+import { isPlatform, isTenant } from '../../features/auth/model/session'
 import { useResource } from '../hooks/use-resource'
 import { Button } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/TextField'
@@ -18,9 +19,10 @@ import { Spinner } from '../../shared/ui/Loading'
 export function OrganizationsPage() {
   const state = useSession()
   if (state.status !== 'authenticated') return null
-  if (state.session.context.accessMode !== 'PLATFORM_SUPERADMIN')
-    return <Navigate to={`/organizations/${state.session.context.organization?.id ?? ''}`} replace />
-  return <PlatformOrganizations />
+  if (isPlatform(state.session)) return <PlatformOrganizations />
+  if (isTenant(state.session) && state.session.context.organization)
+    return <Navigate to={`/organizations/${state.session.context.organization.id}`} replace />
+  return null
 }
 
 function PlatformOrganizations() {

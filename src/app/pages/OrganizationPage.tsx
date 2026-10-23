@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../services/services-context'
+import { isPlatform } from '../../features/auth/model/session'
 import { useResource } from '../hooks/use-resource'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { Notice } from '../../shared/ui/Notice'
@@ -21,7 +22,7 @@ export function OrganizationPage() {
   const location = useLocation()
   const load = useCallback((signal: AbortSignal) => organizations.detail(id, signal), [organizations, id])
   const result = useResource(load)
-  const platform = state.session?.context.accessMode === 'PLATFORM_SUPERADMIN'
+  const platform = state.session ? isPlatform(state.session) : false
   const item = result.value
   const created = isRecord(location.state) && location.state.created === true
   return (

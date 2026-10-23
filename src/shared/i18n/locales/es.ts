@@ -301,6 +301,7 @@ export const es = {
     mode: 'Acceso',
     organization: 'Organización',
     permissions: 'Permisos',
+    noContext: 'Tu cuenta no tiene una organización activa. Cierra sesión o pide acceso a un administrador.',
     noPermissions: 'No hay permisos de organización asignados.',
     platformPermissions: 'La gestión de organizaciones está autorizada por tu rol de plataforma.',
     renew: 'Renovar sesión',

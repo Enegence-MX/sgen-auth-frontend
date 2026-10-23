@@ -294,6 +294,7 @@ export const en = {
     mode: 'Access',
     organization: 'Organization',
     permissions: 'Permissions',
+    noContext: 'Your account has no active organization. Sign out or ask an administrator for access.',
     noPermissions: 'No tenant permissions are assigned.',
     platformPermissions: 'Organization management is authorized by your platform role.',
     renew: 'Renew session',
