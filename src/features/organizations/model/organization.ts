@@ -13,7 +13,14 @@ export interface OrganizationInput {
   rfc: string
   industrySector?: string
   taxAddress?: string
+  mfaRequired?: boolean
 }
+export interface OrganizationChanges {
+  legalName?: string
+  industrySector?: string | null
+  taxAddress?: string
+}
+export const ORGANIZATION_LIMITS = { legalName: 255, industrySector: 150, taxAddress: 4000, reason: 500 } as const
 export interface SecurityPolicy {
   organizationId: string
   mfaRequired: boolean

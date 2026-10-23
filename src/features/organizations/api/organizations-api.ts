@@ -2,6 +2,7 @@ import type { HttpClient } from '../../../shared/api/http-client'
 import type { Envelope } from '../../../shared/api/response'
 import type {
   Organization,
+  OrganizationChanges,
   OrganizationInput,
   OrganizationList,
   SecurityOrganizationOption,
@@ -46,6 +47,22 @@ export function createOrganizationsApi(http: HttpClient) {
     },
     async create(input: OrganizationInput) {
       return (await http.request<Envelope<Organization>>('/organizations', { method: 'POST', body: input })).data
+    },
+    async update(id: string, changes: OrganizationChanges) {
+      return (
+        await http.request<Envelope<Organization>>(`/organizations/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: changes,
+        })
+      ).data
+    },
+    async changeStatus(id: string, active: boolean, reason: string) {
+      return (
+        await http.request<Envelope<Organization>>(
+          `/organizations/${encodeURIComponent(id)}/${active ? 'reactivate' : 'suspend'}`,
+          { method: 'POST', body: { reason } },
+        )
+      ).data
     },
     async securityPolicy(id: string, signal?: AbortSignal) {
       return (
