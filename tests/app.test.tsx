@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { render } from './render'
@@ -111,6 +111,7 @@ describe('current backend flows', () => {
     expect(savedPolicy).not.toHaveProperty('federatedMfaMode')
     expect(savedPolicy).not.toHaveProperty('mfaAllowOptOut')
     expect(savedPolicy).not.toHaveProperty('passwordHistoryCount')
+    expect(savedPolicy).toEqual({ mfaRequired: false })
 
     await user.click(screen.getByRole('tab', { name: /Mapeo de grupos/ }))
     expect(await screen.findByRole('table', { name: 'Mapeo de grupos' })).toBeInTheDocument()
@@ -381,4 +382,30 @@ describe('current backend flows', () => {
     expect(await screen.findByText('Tu cuenta no tiene permiso para invitar miembros a esta organización.')).toBeInTheDocument()
     expect(setup.services.auth.getSnapshot().session?.permissions.map(({ code }) => code)).not.toContain('MANAGE_USERS')
   })
+  it('sends a password expiry between 1 and 730 days or null for no expiry', async () => {
+    const user = userEvent.setup()
+    const setup = fixture({ initial: tenantSession() })
+    render(setup.services, '/security')
+    const noExpiry = await screen.findByRole('switch', { name: 'Sin caducidad periódica' })
+    expect(noExpiry).toBeChecked()
+    expect(screen.getByLabelText('Vigencia de contraseña (días)')).toBeDisabled()
+    await user.click(noExpiry)
+    fireEvent.change(screen.getByLabelText('Vigencia de contraseña (días)'), { target: { value: '45' } })
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await screen.findByRole('status')
+    const bodies = () => setup.fetcher.mock.calls
+      .filter(([url, init]) => String(url).endsWith('/security-policy') && init?.method === 'PATCH')
+      .map(([, init]) => JSON.parse(String(init?.body)) as unknown)
+    expect(bodies()).toEqual([{ passwordExpiryDays: 45 }])
+    await user.click(screen.getByRole('switch', { name: 'Sin caducidad periódica' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await waitFor(() => expect(bodies()).toHaveLength(2))
+    expect(bodies()[1]).toEqual({ passwordExpiryDays: null })
+  })
+  it('shows the invitation auth mode only as information', async () => {
+    render(fixture({ invitation: { authMode: 'FEDERATED' } }).services, '/invitations/test_invitation_token_123456')
+    expect(await screen.findByText('FEDERADO')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /SSO/ })).not.toBeInTheDocument()
+  })
 })
+

@@ -101,4 +101,18 @@ describe('audit query view', () => {
     expect(await screen.findByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
     expect(screen.queryByText('No hay eventos para estos filtros.')).not.toBeInTheDocument()
   })
+  it('labels the tax address change and shows the suspension reason', async () => {
+    const changed: AuditEvent = { ...event, action: 'TENANT_UPDATED', module: 'ORGANIZATIONS', entityType: 'tenants', before: { taxAddress: 'Calle 1' }, after: { taxAddress: 'Calle 2' } }
+    const suspended: AuditEvent = { ...event, id: '5d9f1c2a-3b4e-4f60-8a71-92b3c4d5e6f7', action: 'TENANT_SUSPENDED', entityType: 'tenants', reason: 'Falta de pago', before: { active: true }, after: { active: false } }
+    setup(true, [changed, suspended])
+    const user = await openAudit()
+    const table = await screen.findByRole('table')
+    await user.click(within(table).getAllByRole('button', { name: 'Ver detalle' })[0]!)
+    expect(within(await screen.findByRole('dialog')).getAllByText('Domicilio fiscal').length).toBeGreaterThan(0)
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await user.click(within(table).getAllByRole('button', { name: 'Ver detalle' })[1]!)
+    expect(within(await screen.findByRole('dialog')).getByText('Falta de pago')).toBeInTheDocument()
+  })
 })
+

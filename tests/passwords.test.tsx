@@ -156,4 +156,20 @@ describe('password change flows', () => {
     expect(screen.getByRole('button', { name: 'Actualizar contraseña' })).toBeEnabled()
     expect(screen.queryByRole('form', { name: 'Iniciar sesión' })).not.toBeInTheDocument()
   })
+
+  it.each([
+    ['PASSWORD_TOO_SHORT', 'La contraseña debe tener al menos 15 caracteres Unicode.'],
+    ['PASSWORD_TOO_LONG', 'La contraseña debe tener como máximo 128 caracteres Unicode.'],
+    ['CURRENT_PASSWORD_INVALID', 'La contraseña actual no es correcta.'],
+    ['PASSWORD_CHANGE_BLOCKED', 'El cambio está bloqueado temporalmente.'],
+    ['PASSWORD_CHECK_UNAVAILABLE', 'No pudimos comprobar tu contraseña en este momento.'],
+  ])('shows %s from the backend without signing out', async (code, message) => {
+    const user = userEvent.setup()
+    const setup = passwordFixture(code)
+    render(setup.services, '/password')
+    await submitPassword(user, 'senderos entre pinos y cedros', 'brisa sobre los encinos')
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(setup.services.auth.getSnapshot().status).toBe('authenticated')
+  })
 })
+

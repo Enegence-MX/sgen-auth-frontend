@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next'
-import { ApiError } from '../api/errors'
+import { ApiError, numericDetail } from '../api/errors'
 
 const codes = {
   VALIDATION_FAILED: 'validation',
@@ -56,6 +56,10 @@ export function errorTranslationKey(code: string): ErrorKey {
 export function translateError(error: unknown, t: TFunction): string {
   if (error instanceof ApiError) {
     if (!Object.hasOwn(codes, error.code) && error.serverMessage) return error.serverMessage
+    const minimum = numericDetail(error, 'PASSWORD_TOO_SHORT', 'minimumLength')
+    if (minimum !== undefined) return t('errors.passwordMinimum', { count: minimum })
+    const maximum = numericDetail(error, 'PASSWORD_TOO_LONG', 'maximumLength')
+    if (maximum !== undefined) return t('errors.passwordMaximum', { count: maximum })
     return t(`errors.${errorTranslationKey(error.code)}`)
   }
   if (error instanceof SyntaxError) return t('errors.invalidResponse')

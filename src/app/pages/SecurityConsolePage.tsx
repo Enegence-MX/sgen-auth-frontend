@@ -45,6 +45,9 @@ const invitationRoles: readonly InvitationRole[] = [
   'INTERNAL_AUDITOR',
 ]
 
+const DEFAULT_EXPIRY_DAYS = 90
+const MAX_EXPIRY_DAYS = 730
+
 export function SecurityConsolePage() {
   const { t } = useTranslation()
   const session = useSession()
@@ -135,23 +138,18 @@ export function SecurityConsolePage() {
 
   async function savePolicies(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!organizationId || !policyValues || isPlatform) return
+    if (!organizationId || !policyBase || isPlatform) return
+    const changes: Partial<SecurityPolicyChanges> = Object.fromEntries(
+      Object.entries(draft).filter(([key, value]) => policyBase[key as keyof SecurityPolicyChanges] !== value),
+    )
+    if (!Object.keys(changes).length) {
+      setSaved(true)
+      return
+    }
     setSavingPolicy(true)
     setPolicySaveError(undefined)
     try {
-      const updated = await organizations.updateSecurityPolicy(organizationId, {
-        mfaRequired: policyValues.mfaRequired,
-        passwordMinLength: policyValues.passwordMinLength,
-        passwordExpiryDays: policyValues.passwordExpiryDays,
-        sessionMaxHours: policyValues.sessionMaxHours,
-        idleTimeoutMinutes: policyValues.idleTimeoutMinutes,
-        maxConcurrentSessions: policyValues.maxConcurrentSessions,
-        lockoutEnabled: policyValues.lockoutEnabled,
-        maxLoginAttempts: policyValues.maxLoginAttempts,
-        attemptWindowSeconds: policyValues.attemptWindowSeconds,
-        lockoutDurationMinutes: policyValues.lockoutDurationMinutes,
-        invitationExpiryHours: policyValues.invitationExpiryHours,
-      })
+      const updated = await organizations.updateSecurityPolicy(organizationId, changes)
       setSavedPolicy({ organizationId, value: updated })
       setPolicyDraft(undefined)
       setSaved(true)
@@ -268,16 +266,26 @@ export function SecurityConsolePage() {
                   onChange={(event) => updateNumber((value) => updatePolicy('passwordMinLength', value), event.target.value, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)}
                 />
               </div>
-              <div className={policyFieldClassName}>
-                <SelectField
-                  label={t('securityConsole.passwordExpiry')}
-                  value={policyValues.passwordExpiryDays ?? ''}
+              <div className="flex items-center justify-between gap-4">
+                <p className="m-0 font-semibold text-ink">{t('password.noExpiry')}</p>
+                <Switch
+                  label={t('password.noExpiry')}
+                  hideLabel
+                  checked={policyValues.passwordExpiryDays === null}
                   disabled={isPlatform}
-                  onChange={(event) => updatePolicy('passwordExpiryDays', event.target.value === '' ? null : Number(event.target.value))}
-                >
-                  <option value="">{t('password.noExpiry')}</option>
-                  {[30, 60, 90, 180, 365, 730].map((days) => <option key={days} value={days}>{days} {t('securityConsole.days')}</option>)}
-                </SelectField>
+                  onChange={(event) => updatePolicy('passwordExpiryDays', event.target.checked ? null : DEFAULT_EXPIRY_DAYS)}
+                />
+              </div>
+              <div className={policyFieldClassName}>
+                <TextField
+                  type="number"
+                  min={1}
+                  max={MAX_EXPIRY_DAYS}
+                  label={`${t('securityConsole.passwordExpiry')} (${t('securityConsole.days')})`}
+                  disabled={isPlatform || policyValues.passwordExpiryDays === null}
+                  value={policyValues.passwordExpiryDays ?? ''}
+                  onChange={(event) => updateNumber((value) => updatePolicy('passwordExpiryDays', value), event.target.value, 1, MAX_EXPIRY_DAYS)}
+                />
               </div>
               <p className="m-0 text-sm leading-relaxed text-body">{t('password.expiryHint')}</p>
               <p className="m-0 rounded-control bg-subtle p-3 text-sm leading-relaxed text-body">

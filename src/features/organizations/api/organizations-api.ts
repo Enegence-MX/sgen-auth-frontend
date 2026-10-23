@@ -55,7 +55,7 @@ export function createOrganizationsApi(http: HttpClient) {
         )
       ).data
     },
-    async updateSecurityPolicy(id: string, changes: SecurityPolicyChanges) {
+    async updateSecurityPolicy(id: string, changes: Partial<SecurityPolicyChanges>) {
       return (
         await http.request<Envelope<SecurityPolicy>>(
           `/organizations/${encodeURIComponent(id)}/security-policy`,
