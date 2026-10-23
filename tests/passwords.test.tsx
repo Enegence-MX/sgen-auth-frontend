@@ -117,6 +117,9 @@ describe('password change flows', () => {
       body: JSON.stringify({ currentPassword: currentValue, newPassword: nextValue }),
     }))
     expect(setup.services.auth.getSnapshot()).toEqual({ status: 'anonymous', session: null })
+    const changeIndex = setup.fetcher.mock.calls.findIndex(([url]) => String(url).endsWith('/password/change'))
+    const afterChange = setup.fetcher.mock.calls.slice(changeIndex + 1).map(([url]) => String(url))
+    expect(afterChange.filter((url) => url.endsWith('/auth/me') || url.endsWith('/auth/refresh'))).toEqual([])
 
     await act(async () => { await router.navigate('/organizations') })
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
