@@ -359,13 +359,9 @@ function InvitationSummary({
   expiryLabel,
 }: Readonly<{ invitation: InvitationDetails; expiryLabel: string }>) {
   const { t } = useTranslation()
-  let passwordExpiryLabel = '—'
-  if (invitation.passwordExpiryDays === null) passwordExpiryLabel = t('password.noExpiry')
-  else if (invitation.passwordExpiryDays !== undefined) {
-    passwordExpiryLabel = t('invitation.passwordDays', {
-      count: invitation.passwordExpiryDays,
-    })
-  }
+  const passwordExpiryLabel = invitation.passwordExpiryDays === null
+    ? t('password.noExpiry')
+    : t('invitation.passwordDays', { count: invitation.passwordExpiryDays })
 
   return (
     <aside className="grid min-w-0 grid-cols-1 gap-4">
@@ -383,25 +379,21 @@ function InvitationSummary({
           </dd>
           <dt>{t('securityConsole.passwordExpiry')}</dt>
           <dd className="m-0 break-words text-right font-semibold text-ink">{passwordExpiryLabel}</dd>
-          {invitation.passwordHistoryCount !== undefined && (
-            <>
-              <dt>{t('securityConsole.passwordHistory')}</dt>
-              <dd className="m-0 text-right font-semibold text-ink">
-                {t('invitation.passwordHistoryCount', { count: invitation.passwordHistoryCount })}
-              </dd>
-            </>
-          )}
+          <dt>{t('securityConsole.passwordHistory')}</dt>
+          <dd className="m-0 text-right font-semibold text-ink">
+            {t('invitation.passwordHistoryCount', { count: invitation.passwordHistoryCount })}
+          </dd>
           <dt>{t('securityConsole.mfa')}</dt>
           <dd className="m-0 break-words text-right font-semibold text-ink">
             {invitation.mfaRequired ? t('invitation.required') : t('invitation.optional')}
           </dd>
           <dt>{t('securityConsole.authenticationMode')}</dt>
           <dd className="m-0 break-words text-right font-semibold text-ink">
-            {invitation.authMode === undefined ? '—' : t(`securityConsole.authMode.${invitation.authMode}`)}
+            {t(`securityConsole.authMode.${invitation.authMode}`)}
           </dd>
           <dt>{t('securityConsole.allowedMethods')}</dt>
           <dd className="m-0 text-right font-semibold text-ink">
-            {invitation.mfaAllowedMethods?.length
+            {invitation.mfaAllowedMethods.length
               ? invitation.mfaAllowedMethods
                   .map((method) =>
                     t(

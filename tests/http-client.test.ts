@@ -4,10 +4,12 @@ import { json, denied, serialLock } from './fixtures'
 const base = 'http://localhost:3000/api/v1'
 
 describe('cookie session transport', () => {
-  it('preserves successful HTTP status codes for contract discriminators', async () => {
+  it('preserves HTTP 202 after retrying an expired CSRF token during login', async () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(json({ data: { csrfToken: 'csrf' } }))
+      .mockResolvedValueOnce(denied('CSRF_INVALID', 403))
+      .mockResolvedValueOnce(json({ data: { csrfToken: 'fresh-csrf' } }))
       .mockResolvedValueOnce(json({ data: { mfaRequired: true } }, 202))
     const http = createHttpClient(base, fetcher, serialLock())
     await expect(
@@ -16,6 +18,8 @@ describe('cookie session transport', () => {
         authenticated: false,
       }),
     ).resolves.toMatchObject({ status: 202, body: { data: { mfaRequired: true } } })
+    expect(fetcher).toHaveBeenCalledTimes(4)
+    expect(fetcher.mock.calls[3]?.[1]?.headers).toHaveProperty('X-CSRF-Token', 'fresh-csrf')
   })
   it('sends credentials and fresh CSRF on login, without bearer tokens', async () => {
     const fetcher = vi
@@ -98,5 +102,50 @@ describe('cookie session transport', () => {
       createHttpClient(base, fetcher, lock).request('/auth/logout', { method: 'POST' }),
     ])
     expect(observed).toEqual(['1', '2'])
+  })
+  it('asks for a new CSRF token and retries a mutation once after CSRF_INVALID', async () => {
+    let token = 0
+    const fetcher = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).endsWith('/auth/csrf')) return json({ data: { csrfToken: String(++token) } })
+      return token === 1 ? denied('CSRF_INVALID', 403) : json({ data: { success: true } })
+    })
+    const http = createHttpClient(base, fetcher, serialLock())
+    await expect(http.request('/auth/logout', { method: 'POST' })).resolves.toEqual({ data: { success: true } })
+    expect(fetcher.mock.calls.map(([url]) => String(url).replace(base, ''))).toEqual([
+      '/auth/csrf', '/auth/logout', '/auth/csrf', '/auth/logout',
+    ])
+  })
+  it('stops after one CSRF retry', async () => {
+    const fetcher = vi.fn<typeof fetch>(async (input) =>
+      String(input).endsWith('/auth/csrf') ? json({ data: { csrfToken: 'csrf' } }) : denied('CSRF_INVALID', 403),
+    )
+    const http = createHttpClient(base, fetcher, serialLock())
+    await expect(http.request('/auth/logout', { method: 'POST' })).rejects.toMatchObject({ code: 'CSRF_INVALID' })
+    expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith('/auth/logout'))).toHaveLength(2)
+  })
+  it('refreshes once and repeats the request once after AUTHENTICATION_REQUIRED', async () => {
+    let valid = false
+    const fetcher = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).endsWith('/auth/csrf')) return json({ data: { csrfToken: 'csrf' } })
+      if (String(input).endsWith('/auth/refresh')) {
+        valid = true
+        return json({ data: {} })
+      }
+      return valid ? json({ data: { ok: true } }) : denied('AUTHENTICATION_REQUIRED')
+    })
+    const http = createHttpClient(base, fetcher, serialLock())
+    await expect(http.request('/organizations')).resolves.toEqual({ data: { ok: true } })
+    expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith('/auth/refresh'))).toHaveLength(1)
+    expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith('/organizations'))).toHaveLength(2)
+  })
+  it('reports PERMISSION_REQUIRED so the session can reload its permissions', async () => {
+    const fetcher = vi.fn<typeof fetch>(async (input) =>
+      String(input).endsWith('/auth/csrf') ? json({ data: { csrfToken: 'csrf' } }) : denied('PERMISSION_REQUIRED', 403),
+    )
+    const http = createHttpClient(base, fetcher, serialLock())
+    const changed = vi.fn()
+    http.onPermissionsChanged(changed)
+    await expect(http.request('/organizations', { method: 'POST' })).rejects.toMatchObject({ status: 403 })
+    expect(changed).toHaveBeenCalledOnce()
   })
 })

@@ -2,7 +2,7 @@ import { ApiError } from '../../../shared/api/errors'
 import type { HttpClient } from '../../../shared/api/http-client'
 import type { Envelope } from '../../../shared/api/response'
 import type { Credentials } from '../model/credentials'
-import type { Session } from '../model/session'
+import { normalizeSession, type Session } from '../model/session'
 import type { MfaChallenge } from '../model/mfa-challenge'
 
 type LoginSuccess = {
@@ -17,11 +17,15 @@ type LoginResponse = LoginSuccess | MfaChallenge
 export type LoginResult =
   | { status: 'authenticated' }
   | { status: 'mfa'; challenge: MfaChallenge }
+export interface SettingsChanges {
+  language?: string
+  theme?: string
+}
 
 export function createAuthApi(http: HttpClient) {
   return {
     async profile() {
-      return (await http.request<Envelope<Session>>('/auth/me')).data
+      return normalizeSession((await http.request<Envelope<Session>>('/auth/me')).data)
     },
     async login(credentials: Credentials, tenantId?: string) {
       const response = await http.exchange<Envelope<LoginResponse>>('/auth/login', {
@@ -57,7 +61,7 @@ export function createAuthApi(http: HttpClient) {
     async logout() {
       await http.request('/auth/logout', { method: 'POST' })
     },
-    async updateSettings(settings: { language?: string; theme?: string }) {
+    async updateSettings(settings: SettingsChanges) {
       await http.request('/auth/me/settings', {
         method: 'PATCH',
         body: settings,

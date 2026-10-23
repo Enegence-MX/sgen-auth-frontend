@@ -1,6 +1,7 @@
 import { useCallback, useState, type SubmitEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../../../app/services/services-context'
+import { isPlatform } from '../../auth/model/session'
 import { useResource } from '../../../app/hooks/use-resource'
 import { Card } from '../../../shared/ui/Card'
 import { Button } from '../../../shared/ui/Button'
@@ -23,7 +24,8 @@ export function AuditPanel({ tenantId }: Readonly<{ tenantId?: string }>) {
   const session = useSession()
   const { t } = useTranslation()
   if (session.status !== 'authenticated') return null
-  const allowed = hasPermission(session.session, 'VIEW_SECURITY_AUDIT', 'SECURITY')
+  const allowed = isPlatform(session.session)
+    || hasPermission(session.session, 'VIEW_SECURITY_AUDIT', 'SECURITY')
   if (!allowed) return <Notice>{t('audit.denied')}</Notice>
   return <AuditResults key={tenantId ?? 'current'} tenantId={tenantId} />
 }

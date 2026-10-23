@@ -1,50 +1,66 @@
 import type { TFunction } from 'i18next'
-import { ApiError } from '../api/errors'
+import { ApiError, numericDetail } from '../api/errors'
 
 const codes = {
-  INVALID_CREDENTIALS: 'invalidCredentials',
-  SESSION_INVALID: 'sessionExpired',
+  VALIDATION_FAILED: 'validation',
+  MFA_CHOICE_REQUIRED: 'mfaChoiceRequired',
   AUTHENTICATION_REQUIRED: 'sessionExpired',
+  INVALID_CREDENTIALS: 'invalidCredentials',
+  INVALID_MFA_CODE: 'invalidMfaCode',
+  MFA_CHALLENGE_INVALID: 'mfaChallengeInvalid',
+  SESSION_INVALID: 'sessionExpired',
   CSRF_INVALID: 'csrf',
+  CURRENT_PASSWORD_INVALID: 'currentPasswordInvalid',
+  FEDERATED_LOGIN_REQUIRED: 'federated',
+  PASSWORD_CHANGE_BLOCKED: 'passwordChangeBlocked',
+  PASSWORD_CHANGE_REQUIRED: 'passwordChange',
+  PERMISSION_REQUIRED: 'forbidden',
   PLATFORM_REQUIRED: 'forbidden',
   ACCESS_DENIED: 'forbidden',
-  PERMISSION_REQUIRED: 'forbidden',
-  MFA_REQUIRED: 'mfa',
-  FEDERATED_LOGIN_REQUIRED: 'federated',
-  PASSWORD_CHANGE_REQUIRED: 'passwordChange',
-  ORGANIZATION_NOT_FOUND: 'notFound',
   NOT_FOUND: 'resourceNotFound',
-  DUPLICATE_RECORD: 'duplicate',
+  ORGANIZATION_NOT_FOUND: 'notFound',
+  INVITATION_NOT_FOUND: 'invitationNotFound',
+  METHOD_NOT_ALLOWED: 'unknown',
   CONFLICT: 'conflict',
+  DUPLICATE_RECORD: 'duplicate',
+  ACCOUNT_EXISTS: 'accountExists',
+  INVITATION_ALREADY_PENDING: 'invitationAlreadyPending',
+  INVITATION_NOT_PENDING: 'invitationUsed',
   MFA_POLICY_CONFLICT: 'policy',
   POLICY_MISSING: 'policy',
-  VALIDATION_FAILED: 'validation',
-  REQUEST_FAILED: 'validation',
-  INVALID_DATA: 'validation',
-  RATE_LIMITED: 'rateLimit',
-  INVALID_RESPONSE: 'invalidResponse',
-  INVITATION_NOT_FOUND: 'invitationNotFound',
+  TENANT_SELECTION_REQUIRED: 'tenantSelection',
   INVITATION_EXPIRED: 'invitationExpired',
-  INVITATION_NOT_PENDING: 'invitationUsed',
-  PASSWORD_TOO_SHORT: 'passwordTooShort',
-  PASSWORD_TOO_LONG: 'passwordTooLong',
-  PASSWORD_COMPROMISED: 'passwordCompromised',
-  PASSWORD_CHECK_UNAVAILABLE: 'passwordCheckUnavailable',
-  PASSWORD_REUSED: 'passwordReused',
-  CURRENT_PASSWORD_INVALID: 'currentPasswordInvalid',
-  PASSWORD_CHANGE_BLOCKED: 'passwordChangeBlocked',
-  PASSWORD_INVALID_UNICODE: 'passwordInvalidUnicode',
-  MFA_REQUIRED_BY_ORGANIZATION: 'mfaRequiredByOrganization',
-  MFA_CHOICE_REQUIRED: 'mfaChoiceRequired',
-  MFA_CHALLENGE_INVALID: 'mfaChallengeInvalid',
-  INVALID_MFA_CODE: 'invalidMfaCode',
-  INVITATION_ALREADY_PENDING: 'invitationAlreadyPending',
+  PAYLOAD_TOO_LARGE: 'validation',
+  INVALID_DATA: 'validation',
   INVALID_ROLES: 'validation',
+  MFA_REQUIRED_BY_ORGANIZATION: 'mfaRequiredByOrganization',
+  PASSWORD_COMPROMISED: 'passwordCompromised',
+  PASSWORD_INVALID_UNICODE: 'passwordInvalidUnicode',
+  PASSWORD_REUSED: 'passwordReused',
+  PASSWORD_TOO_LONG: 'passwordTooLong',
+  PASSWORD_TOO_SHORT: 'passwordTooShort',
+  RATE_LIMITED: 'rateLimit',
+  INTERNAL_ERROR: 'unknown',
+  DATABASE_NOT_READY: 'serviceStarting',
+  INVALID_DATABASE_ROLE: 'unknown',
+  PASSWORD_CHECK_UNAVAILABLE: 'passwordCheckUnavailable',
+  INVALID_RESPONSE: 'invalidResponse',
 } as const
+
+type ErrorKey = (typeof codes)[keyof typeof codes] | 'unknown'
+
+export function errorTranslationKey(code: string): ErrorKey {
+  return Object.hasOwn(codes, code) ? codes[code as keyof typeof codes] : 'unknown'
+}
+
 export function translateError(error: unknown, t: TFunction): string {
   if (error instanceof ApiError) {
-    const key = Object.hasOwn(codes, error.code) ? codes[error.code as keyof typeof codes] : 'unknown'
-    return t(`errors.${key}`)
+    if (!Object.hasOwn(codes, error.code) && error.serverMessage) return error.serverMessage
+    const minimum = numericDetail(error, 'PASSWORD_TOO_SHORT', 'minimumLength')
+    if (minimum !== undefined) return t('errors.passwordMinimum', { count: minimum })
+    const maximum = numericDetail(error, 'PASSWORD_TOO_LONG', 'maximumLength')
+    if (maximum !== undefined) return t('errors.passwordMaximum', { count: maximum })
+    return t(`errors.${errorTranslationKey(error.code)}`)
   }
   if (error instanceof SyntaxError) return t('errors.invalidResponse')
   if (error instanceof TypeError) return t('errors.network')

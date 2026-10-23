@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { render } from './render'
-import { fixture, organization, tenantSession } from './fixtures'
+import { fixture, organization, platform, tenantSession } from './fixtures'
 import type { AuditEvent } from '../src/features/audit/api/audit-api'
 
 const tenantId = 'c670858e-4754-4d6c-9d12-31f94503a8f7'
@@ -35,6 +35,18 @@ async function openAudit() {
   return user
 }
 describe('audit query view', () => {
+  it('allows platform audit access without a tenant permission', async () => {
+    const result = fixture({ initial: platform })
+    const list = vi.spyOn(result.services.audit, 'list').mockResolvedValue({
+      data: [event], meta: { page: 1, pageSize: 25, total: 1 },
+    })
+    vi.spyOn(result.services.audit, 'catalog').mockResolvedValue([])
+    render(result.services, '/security')
+    await openAudit()
+    expect(await screen.findByRole('table')).toBeInTheDocument()
+    expect(list).toHaveBeenCalledWith(1, { tenantId: undefined }, expect.any(AbortSignal))
+    expect(screen.queryByText('Tu rol no tiene permiso para consultar la auditoría.')).not.toBeInTheDocument()
+  })
   it('loads permitted events, applies UTC filters, paginates and shows safe details', async () => {
     const result = setup()
     const user = await openAudit()
@@ -100,5 +112,18 @@ describe('audit query view', () => {
     await user.click(screen.getByRole('button', { name: 'Aplicar filtros' }))
     expect(await screen.findByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
     expect(screen.queryByText('No hay eventos para estos filtros.')).not.toBeInTheDocument()
+  })
+  it('labels the tax address change and shows the suspension reason', async () => {
+    const changed: AuditEvent = { ...event, action: 'TENANT_UPDATED', module: 'ORGANIZATIONS', entityType: 'tenants', before: { taxAddress: 'Calle 1' }, after: { taxAddress: 'Calle 2' } }
+    const suspended: AuditEvent = { ...event, id: '5d9f1c2a-3b4e-4f60-8a71-92b3c4d5e6f7', action: 'TENANT_SUSPENDED', entityType: 'tenants', reason: 'Falta de pago', before: { active: true }, after: { active: false } }
+    setup(true, [changed, suspended])
+    const user = await openAudit()
+    const table = await screen.findByRole('table')
+    await user.click(within(table).getAllByRole('button', { name: 'Ver detalle' })[0]!)
+    expect(within(await screen.findByRole('dialog')).getAllByText('Domicilio fiscal').length).toBeGreaterThan(0)
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await user.click(within(table).getAllByRole('button', { name: 'Ver detalle' })[1]!)
+    expect(within(await screen.findByRole('dialog')).getByText('Falta de pago')).toBeInTheDocument()
   })
 })

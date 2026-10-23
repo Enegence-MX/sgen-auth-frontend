@@ -1,9 +1,9 @@
-import { ApiError, isUnauthorized, responseError } from './errors'
+import { ApiError, hasCode, isUnauthorized, responseError } from './errors'
 import { isRecord } from './response'
 import { browserSessionLock, type SessionLock } from './session-lock'
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'PUT'
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
   body?: unknown
   authenticated?: boolean
   signal?: AbortSignal
@@ -19,6 +19,7 @@ export interface HttpClient {
   refresh(force?: boolean): Promise<void>
   onSessionExpired(handler: () => void): void
   onPasswordChangeRequired(handler: () => void): void
+  onPermissionsChanged(handler: () => void): void
 }
 
 export function createHttpClient(
@@ -29,6 +30,7 @@ export function createHttpClient(
   let refreshing: Promise<void> | undefined
   let expired = () => {}
   let passwordChangeRequired = () => {}
+  let permissionsChanged = () => {}
 
   async function send<T>(path: string, options: RequestOptions = {}, csrf?: string): Promise<HttpResponse<T>> {
     const response = await fetcher(`${baseUrl}${path}`, {
@@ -45,17 +47,27 @@ export function createHttpClient(
     if (!response.ok) {
       const error = responseError(response.status, body)
       if (error.code === 'PASSWORD_CHANGE_REQUIRED') passwordChangeRequired()
+      if (error.code === 'PERMISSION_REQUIRED') permissionsChanged()
       throw error
     }
     if (!isRecord(body) || !('data' in body)) throw new ApiError(502, 'INVALID_RESPONSE')
     return { status: response.status, body: body as T }
   }
 
-  async function mutation<T>(path: string, options: RequestOptions): Promise<HttpResponse<T>> {
+  async function csrfToken(): Promise<string> {
     // Obtain the current cookie-bound value inside the cross-tab lock, never persist it.
     const { body: csrf } = await send<{ data: { csrfToken: string } }>('/auth/csrf')
     if (typeof csrf.data.csrfToken !== 'string') throw new ApiError(502, 'INVALID_RESPONSE')
-    return send<T>(path, options, csrf.data.csrfToken)
+    return csrf.data.csrfToken
+  }
+
+  async function mutation<T>(path: string, options: RequestOptions): Promise<HttpResponse<T>> {
+    try {
+      return await send<T>(path, options, await csrfToken())
+    } catch (error) {
+      if (!hasCode(error, 'CSRF_INVALID')) throw error
+    }
+    return send<T>(path, options, await csrfToken())
   }
 
   const invoke = <T>(path: string, options: RequestOptions) =>
@@ -110,6 +122,7 @@ export function createHttpClient(
     },
     onPasswordChangeRequired(handler) { passwordChangeRequired = handler },
     exchange,
+    onPermissionsChanged(handler) { permissionsChanged = handler },
     async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
       return (await exchange<T>(path, options)).body
     },

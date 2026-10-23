@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useServices, useSession } from '../services/services-context'
+import { isPlatform } from '../../features/auth/model/session'
 import { Button } from '../../shared/ui/Button'
 import { ErrorNotice } from '../../shared/ui/ErrorNotice'
 import { Notice } from '../../shared/ui/Notice'
@@ -34,7 +35,7 @@ export function SessionPage() {
   }
   if (state.status !== 'authenticated') return null
   const { session } = state
-  const platform = session.context.accessMode === 'PLATFORM_SUPERADMIN'
+  const platform = isPlatform(session)
   return (
     <section className="grid min-w-0 gap-6">
       <PageHeader title={t('session.title')} description={t('session.description')} actions={

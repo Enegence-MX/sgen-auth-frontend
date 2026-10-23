@@ -1,3 +1,5 @@
+import type { Page } from '../../../shared/api/response'
+
 export interface Organization {
   id: string
   legalName: string
@@ -13,7 +15,14 @@ export interface OrganizationInput {
   rfc: string
   industrySector?: string
   taxAddress?: string
+  mfaRequired?: boolean
 }
+export interface OrganizationChanges {
+  legalName?: string
+  industrySector?: string | null
+  taxAddress?: string
+}
+export const ORGANIZATION_LIMITS = { legalName: 255, industrySector: 150, taxAddress: 4000, reason: 500 } as const
 export interface SecurityPolicy {
   organizationId: string
   mfaRequired: boolean
@@ -31,10 +40,7 @@ export interface SecurityPolicy {
   updatedAt: string
 }
 export type SecurityPolicyChanges = Omit<SecurityPolicy, 'organizationId' | 'mfaAllowedMethods' | 'updatedAt'>
-export interface OrganizationList {
-  data: Organization[]
-  meta: { page: number; pageSize: number; total: number }
-}
+export type OrganizationList = Page<Organization>
 export interface SecurityOrganizationOption {
   id: string
   name: string

@@ -1,5 +1,5 @@
 import { isUnauthorized } from '../../../shared/api/errors'
-import type { AuthApi } from '../api/auth-api'
+import type { AuthApi, SettingsChanges } from '../api/auth-api'
 import type { Credentials } from './credentials'
 import type { Session } from './session'
 import type { MfaChallenge } from './mfa-challenge'
@@ -103,7 +103,7 @@ export class SessionStore {
     await this.api.refresh()
     await this.restore()
   }
-  async updateSettings(settings: { language?: string; theme?: string }): Promise<void> {
+  async updateSettings(settings: SettingsChanges): Promise<void> {
     await this.api.updateSettings(settings)
     if (this.state.status === 'authenticated') {
       const updatedSession = {
