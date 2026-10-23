@@ -165,7 +165,8 @@ describe('current backend flows', () => {
     expect(await screen.findByRole('list', { name: 'Progreso de activación' })).toBeInTheDocument()
     expect(screen.getByText('Política de la organización')).toBeInTheDocument()
     expect(screen.getByText('Sin caducidad periódica')).toBeInTheDocument()
-    expect(screen.queryByText('Histórico sin reúso')).not.toBeInTheDocument()
+    expect(screen.getByText('Histórico sin reúso')).toBeInTheDocument()
+    expect(screen.getByText('5 contraseñas')).toBeInTheDocument()
     await user.type(await screen.findByLabelText('Nombre completo'), 'New Member')
     await user.type(screen.getByLabelText('Crea una contraseña'), 'a-long-test-password')
     await user.type(screen.getByLabelText('Confirma la contraseña'), 'a-long-test-password')
@@ -195,18 +196,6 @@ describe('current backend flows', () => {
         body: expect.stringContaining('"mfa":"WAIVE"'),
       }),
     )
-  })
-  it('renders invitation details when the API omits newer policy fields', async () => {
-    const setup = fixture({
-      invitation: {
-        passwordExpiryDays: undefined,
-        mfaAllowedMethods: undefined,
-        authMode: undefined,
-      },
-    })
-    render(setup.services, '/invitations/test_invitation_token_123456')
-    expect(await screen.findByText('Política de la organización')).toBeInTheDocument()
-    expect(screen.getByText('mariana.torres@energia-bajio.test')).toBeInTheDocument()
   })
   it('enables optional MFA without requesting a second activation code', async () => {
     const user = userEvent.setup()
@@ -323,9 +312,8 @@ describe('current backend flows', () => {
   })
   it.each([
     'INVALID_CREDENTIALS',
-    'MFA_REQUIRED',
     'FEDERATED_LOGIN_REQUIRED',
-    'PASSWORD_CHANGE_REQUIRED',
+    'RATE_LIMITED',
   ])('does not authenticate when backend returns %s', async (code) => {
     const user = userEvent.setup()
     const { router } = render(fixture({ loginError: code }).services)

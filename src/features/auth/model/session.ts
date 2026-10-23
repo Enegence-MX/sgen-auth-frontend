@@ -8,8 +8,8 @@ export interface Identity {
   name: string
   type: string
   active: boolean
-  language?: string
-  theme?: string
+  language: string | null
+  theme: string | null
 }
 export interface SessionContext {
   accessMode: 'TENANT_USER' | 'PLATFORM_SUPERADMIN'

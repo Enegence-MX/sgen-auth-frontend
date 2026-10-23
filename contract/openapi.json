@@ -1,0 +1,3743 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "AppController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "data": {
+                    "status": "ok"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/v1/auth/csrf": {
+      "get": {
+        "operationId": "AuthController_csrfToken",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfResponse"
+                },
+                "example": {
+                  "data": {
+                    "csrfToken": "k3Jt9QxVb2…"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "summary": "Obtener token CSRF antes del login o recuperar el token al recargar la página",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_signIn",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              },
+              "example": {
+                "email": "ana@example.test",
+                "password": "una frase larga y fácil de recordar"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session opened. The access and refresh tokens are set as httpOnly cookies, never in JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                },
+                "example": {
+                  "data": {
+                    "identity": {
+                      "id": "0b8f5d1e-6a2c-4f3b-9e7d-1c4a8b2e6f90",
+                      "email": "ana@example.test",
+                      "name": "Ana López",
+                      "type": "CUSTOMER",
+                      "active": true,
+                      "language": "es-MX",
+                      "theme": null
+                    },
+                    "context": {
+                      "accessMode": "TENANT_USER",
+                      "organization": {
+                        "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                        "legalName": "Alpha Energía S.A. de C.V."
+                      }
+                    },
+                    "expiresIn": 600,
+                    "csrfToken": "k3Jt9QxVb2…"
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "MFA challenge started. No session is open yet and no session cookie is set. A 6-digit code is sent by email to sentTo. It expires in 10 minutes (see expiresAt) and allows 5 attempts. Until the code is verified, GET /auth/me answers 401 AUTHENTICATION_REQUIRED. Only POST /auth/mfa/verify accepts the challengeToken, together with the code. After an expired or exhausted challenge (401 MFA_CHALLENGE_INVALID), start a new login.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaChallengeResponse"
+                },
+                "example": {
+                  "data": {
+                    "mfaRequired": true,
+                    "method": "EMAIL",
+                    "challengeToken": "Zq8hT2mN5vXw1cR7yB4kLp9sD3fG6jH0",
+                    "sentTo": "a**@example.test",
+                    "expiresAt": "2026-10-21T15:10:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "summary": "Iniciar sesión local; nunca devuelve los tokens de acceso en JSON",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/verify": {
+      "post": {
+        "operationId": "AuthController_confirmMfa",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyMfaDto"
+              },
+              "example": {
+                "challengeToken": "Zq8hT2mN5vXw1cR7yB4kLp9sD3fG6jH0",
+                "code": "123456"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                },
+                "example": {
+                  "data": {
+                    "identity": {
+                      "id": "0b8f5d1e-6a2c-4f3b-9e7d-1c4a8b2e6f90",
+                      "email": "ana@example.test",
+                      "name": "Ana López",
+                      "type": "CUSTOMER",
+                      "active": true,
+                      "language": "es-MX",
+                      "theme": null
+                    },
+                    "context": {
+                      "accessMode": "TENANT_USER",
+                      "organization": {
+                        "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                        "legalName": "Alpha Energía S.A. de C.V."
+                      }
+                    },
+                    "expiresIn": 600,
+                    "csrfToken": "k3Jt9QxVb2…"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "summary": "Confirmar el código enviado por correo y abrir la sesión",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_renew",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session renewed with new cookies and a new csrfToken. The refresh token is rotated: each one works once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                },
+                "example": {
+                  "data": {
+                    "identity": {
+                      "id": "0b8f5d1e-6a2c-4f3b-9e7d-1c4a8b2e6f90",
+                      "email": "ana@example.test",
+                      "name": "Ana López",
+                      "type": "CUSTOMER",
+                      "active": true,
+                      "language": "es-MX",
+                      "theme": null
+                    },
+                    "context": {
+                      "accessMode": "TENANT_USER",
+                      "organization": {
+                        "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                        "legalName": "Alpha Energía S.A. de C.V."
+                      }
+                    },
+                    "expiresIn": 600,
+                    "csrfToken": "k3Jt9QxVb2…"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "summary": "Rotar el token de actualización y verificar el estado de la sesión",
+        "tags": [
+          "Authentication"
+        ],
+        "description": "Rotates the refresh token: the old one stops working and a new one is set in the cookie. Reuse of an old refresh token closes the whole session (TOKEN_REUSE audit event) and answers 401 SESSION_INVALID. The session also ends on idle timeout, after the maximum session hours of the organization policy, or when the membership or organization is no longer active. Send X-CSRF-Token from the same session."
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentSessionResponse"
+                },
+                "example": {
+                  "data": {
+                    "identity": {
+                      "id": "0b8f5d1e-6a2c-4f3b-9e7d-1c4a8b2e6f90",
+                      "email": "ana@example.test",
+                      "name": "Ana López",
+                      "type": "CUSTOMER",
+                      "active": true,
+                      "language": "es-MX",
+                      "theme": null
+                    },
+                    "context": {
+                      "accessMode": "TENANT_USER",
+                      "organization": {
+                        "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                        "legalName": "Alpha Energía S.A. de C.V."
+                      }
+                    },
+                    "permissions": [
+                      {
+                        "module": "CONFIGURATION",
+                        "code": "ASSIGN_ROLES"
+                      },
+                      {
+                        "module": "SECURITY",
+                        "code": "MANAGE_SECURITY_POLICIES"
+                      }
+                    ],
+                    "password": {
+                      "policy": {
+                        "minimumLength": 15,
+                        "maximumLength": 128,
+                        "historyCount": 5,
+                        "expiryDays": null,
+                        "lengthUnit": "UNICODE_CODE_POINTS"
+                      },
+                      "changeRequired": false,
+                      "expiresAt": null,
+                      "daysRemaining": null,
+                      "expiresSoon": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/me/settings": {
+      "patch": {
+        "operationId": "AuthController_modifySettings",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsDto"
+              },
+              "example": {
+                "language": "es-MX",
+                "theme": "dark"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                },
+                "example": {
+                  "data": {
+                    "success": true
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_signOut",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                },
+                "example": {
+                  "data": {
+                    "success": true
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/password/policy": {
+      "get": {
+        "operationId": "PasswordController_policy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordStateResponse"
+                },
+                "example": {
+                  "data": {
+                    "policy": {
+                      "minimumLength": 15,
+                      "maximumLength": 128,
+                      "historyCount": 5,
+                      "expiryDays": null,
+                      "lengthUnit": "UNICODE_CODE_POINTS"
+                    },
+                    "changeRequired": false,
+                    "expiresAt": null,
+                    "daysRemaining": null,
+                    "expiresSoon": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "Passwords"
+        ]
+      }
+    },
+    "/api/v1/password/change": {
+      "put": {
+        "operationId": "PasswordController_change",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              },
+              "example": {
+                "currentPassword": "una frase larga y fácil de recordar",
+                "newPassword": "otra frase distinta para la cuenta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponse"
+                },
+                "example": {
+                  "data": {
+                    "success": true
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "Passwords"
+        ]
+      }
+    },
+    "/api/v1/organizations": {
+      "post": {
+        "operationId": "OrganizationsController_register",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrganizationDto"
+              },
+              "example": {
+                "legalName": "Alpha Energía S.A. de C.V.",
+                "rfc": "AEN010101AB1",
+                "industrySector": "Generación de energía",
+                "taxAddress": "Av. Reforma 100, Cuauhtémoc, CDMX, 06600",
+                "mfaRequired": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                    "legalName": "Alpha Energía S.A. de C.V.",
+                    "rfc": "AEN010101AB1",
+                    "industrySector": "Generación de energía",
+                    "taxAddress": "Av. Reforma 100, Cuauhtémoc, CDMX, 06600",
+                    "active": true,
+                    "createdAt": "2026-10-21T15:00:00.000Z",
+                    "updatedAt": "2026-10-21T15:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Registrar una empresa (superadmin de plataforma)",
+        "tags": [
+          "Organizations"
+        ]
+      },
+      "get": {
+        "operationId": "OrganizationsController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100000,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Case-insensitive text contained in legalName or rfc. Blank means no filter.",
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationListResponse"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                      "legalName": "Alpha Energía S.A. de C.V.",
+                      "rfc": "AEN010101AB1",
+                      "industrySector": "Generación de energía",
+                      "taxAddress": "Av. Reforma 100, Cuauhtémoc, CDMX, 06600",
+                      "active": true,
+                      "createdAt": "2026-10-21T15:00:00.000Z",
+                      "updatedAt": "2026-10-21T15:00:00.000Z"
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "pageSize": 25,
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Listar empresas (superadmin de plataforma)",
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/api/v1/organizations/{id}": {
+      "get": {
+        "operationId": "OrganizationsController_find",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                    "legalName": "Alpha Energía S.A. de C.V.",
+                    "rfc": "AEN010101AB1",
+                    "industrySector": "Generación de energía",
+                    "taxAddress": "Av. Reforma 100, Cuauhtémoc, CDMX, 06600",
+                    "active": true,
+                    "createdAt": "2026-10-21T15:00:00.000Z",
+                    "updatedAt": "2026-10-21T15:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "OrganizationsController_modify",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationDto"
+              },
+              "examples": {
+                "platform": {
+                  "summary": "Platform superadmin: any field",
+                  "value": {
+                    "legalName": "Alpha Energía Renovable S.A. de C.V.",
+                    "taxAddress": "Av. Insurgentes 200, Benito Juárez, CDMX, 03100"
+                  }
+                },
+                "organization": {
+                  "summary": "Organization admin: sector and tax address",
+                  "value": {
+                    "industrySector": "Salud",
+                    "taxAddress": "Calle 3, CDMX"
+                  }
+                },
+                "clear": {
+                  "summary": "Clear the industry sector",
+                  "value": {
+                    "industrySector": null
+                  }
+                }
+              }
+            }
+          },
+          "description": "Send at least one field. An omitted field does not change. Only a platform superadmin changes legalName. An organization user with MANAGE_ORGANIZATION_PROFILE changes industrySector and taxAddress of its own organization. For industrySector, null or a blank string clears the value (stored as NULL). taxAddress can change but cannot be null or blank once the organization exists. Text is trimmed. rfc is immutable: sending it, or any unknown field, answers 400. To change the status use POST /organizations/{id}/suspend and POST /organizations/{id}/reactivate."
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                    "legalName": "Alpha Energía S.A. de C.V.",
+                    "rfc": "AEN010101AB1",
+                    "industrySector": "Salud",
+                    "taxAddress": "Av. Reforma 100, Cuauhtémoc, CDMX, 06600",
+                    "active": true,
+                    "createdAt": "2026-10-21T15:00:00.000Z",
+                    "updatedAt": "2026-10-21T16:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Cambiar los datos de una empresa: la plataforma todos; la propia empresa, giro y domicilio fiscal",
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/api/v1/organizations/{id}/suspend": {
+      "post": {
+        "operationId": "OrganizationsController_suspend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationStatusDto"
+              },
+              "example": {
+                "reason": "Falta de pago"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                    "legalName": "Alpha Energía S.A. de C.V.",
+                    "rfc": "AEN010101AB1",
+                    "industrySector": "Generación de energía",
+                    "taxAddress": "Av. Reforma 100, Cuauhtémoc, CDMX, 06600",
+                    "active": false,
+                    "createdAt": "2026-10-21T15:00:00.000Z",
+                    "updatedAt": "2026-10-21T16:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Suspender una empresa y cerrar sus sesiones (superadmin de plataforma)",
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/api/v1/organizations/{id}/reactivate": {
+      "post": {
+        "operationId": "OrganizationsController_reactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationStatusDto"
+              },
+              "example": {
+                "reason": "Pago recibido"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                    "legalName": "Alpha Energía S.A. de C.V.",
+                    "rfc": "AEN010101AB1",
+                    "industrySector": "Generación de energía",
+                    "taxAddress": "Av. Reforma 100, Cuauhtémoc, CDMX, 06600",
+                    "active": true,
+                    "createdAt": "2026-10-21T15:00:00.000Z",
+                    "updatedAt": "2026-10-21T17:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Reactivar una empresa suspendida (superadmin de plataforma)",
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/api/v1/organizations/{id}/security-policy": {
+      "get": {
+        "operationId": "OrganizationsController_findPolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityPolicyResponse"
+                },
+                "example": {
+                  "data": {
+                    "organizationId": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                    "mfaRequired": true,
+                    "mfaAllowedMethods": [
+                      "EMAIL"
+                    ],
+                    "passwordMinLength": 15,
+                    "passwordExpiryDays": null,
+                    "sessionMaxHours": 12,
+                    "idleTimeoutMinutes": 30,
+                    "maxConcurrentSessions": 3,
+                    "lockoutEnabled": true,
+                    "maxLoginAttempts": 5,
+                    "attemptWindowSeconds": 900,
+                    "lockoutDurationMinutes": 15,
+                    "invitationExpiryHours": 72,
+                    "updatedAt": "2026-10-21T15:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "Organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "OrganizationsController_changePolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSecurityPolicyDto"
+              },
+              "example": {
+                "passwordMinLength": 16,
+                "idleTimeoutMinutes": 20
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityPolicyResponse"
+                },
+                "example": {
+                  "data": {
+                    "organizationId": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                    "mfaRequired": true,
+                    "mfaAllowedMethods": [
+                      "EMAIL"
+                    ],
+                    "passwordMinLength": 15,
+                    "passwordExpiryDays": null,
+                    "sessionMaxHours": 12,
+                    "idleTimeoutMinutes": 30,
+                    "maxConcurrentSessions": 3,
+                    "lockoutEnabled": true,
+                    "maxLoginAttempts": 5,
+                    "attemptWindowSeconds": 900,
+                    "lockoutDurationMinutes": 15,
+                    "invitationExpiryHours": 72,
+                    "updatedAt": "2026-10-21T15:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Cambiar la política de seguridad de la propia empresa",
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/api/v1/organizations/{id}/invitations": {
+      "post": {
+        "operationId": "InvitationsController_create",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvitationDto"
+              },
+              "example": {
+                "email": "luis@example.test",
+                "roles": [
+                  "SYSTEM_ADMIN"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": "3e5a7c9b-1d2f-4a6b-8c0e-2f4a6c8e0b1d",
+                    "email": "luis@example.test",
+                    "roles": [
+                      "SYSTEM_ADMIN"
+                    ],
+                    "expiresAt": "2026-10-24T15:00:00.000Z",
+                    "status": "PENDING"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Invitar a una persona a la empresa y enviarle el correo de activación",
+        "tags": [
+          "Invitations"
+        ]
+      }
+    },
+    "/api/v1/invitations/lookup": {
+      "post": {
+        "operationId": "InvitationsController_find",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationTokenDto"
+              },
+              "example": {
+                "token": "pW4sX8vB2nM6qR0tY3uI7oP1aS5dF9gH"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationDetailsResponse"
+                },
+                "example": {
+                  "data": {
+                    "legalName": "Alpha Energía S.A. de C.V.",
+                    "email": "luis@example.test",
+                    "expiresAt": "2026-10-24T15:00:00.000Z",
+                    "status": "PENDING",
+                    "hasAccount": false,
+                    "hasMfa": false,
+                    "mfaRequired": true,
+                    "passwordMinLength": 15,
+                    "passwordExpiryDays": null,
+                    "passwordHistoryCount": 5,
+                    "mfaAllowedMethods": [
+                      "EMAIL"
+                    ],
+                    "authMode": "LOCAL",
+                    "mfaWaiver": null
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "summary": "Validar el token de una invitación sin usarlo",
+        "tags": [
+          "Invitations"
+        ]
+      }
+    },
+    "/api/v1/invitations/accept": {
+      "post": {
+        "operationId": "InvitationsController_activate",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Valor obtenido de GET /auth/csrf o de la última respuesta de login/refresh."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationDto"
+              },
+              "example": {
+                "token": "pW4sX8vB2nM6qR0tY3uI7oP1aS5dF9gH",
+                "fullName": "Luis Pérez",
+                "password": "una frase larga y fácil de recordar",
+                "mfa": "ENABLE"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedInvitationResponse"
+                },
+                "example": {
+                  "data": {
+                    "email": "luis@example.test",
+                    "legalName": "Alpha Energía S.A. de C.V.",
+                    "mfa": "ENABLED"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "summary": "Aceptar la invitación: crea la cuenta y la membresía",
+        "tags": [
+          "Invitations"
+        ]
+      }
+    },
+    "/api/v1/audit-events": {
+      "get": {
+        "operationId": "AuditController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100000,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actor",
+            "required": false,
+            "in": "query",
+            "description": "Nombre o UUID de la persona que realizó la acción",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PLATFORM",
+                "TENANT",
+                "CORPORATE"
+              ]
+            }
+          },
+          {
+            "name": "result",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SUCCESS",
+                "DENIED",
+                "FAILURE"
+              ]
+            }
+          },
+          {
+            "name": "tenantId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventListResponse"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "7b9d1f3a-5c7e-4b2d-9f1a-3c5e7a9b1d2f",
+                      "actorId": "0b8f5d1e-6a2c-4f3b-9e7d-1c4a8b2e6f90",
+                      "actorName": "Ana López",
+                      "scope": "TENANT",
+                      "tenantId": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                      "tenantName": "Alpha Energía S.A. de C.V.",
+                      "groupId": null,
+                      "groupName": null,
+                      "action": "INVITATION_SENT",
+                      "module": "IAM",
+                      "entityType": "INVITATION",
+                      "entityId": "3e5a7c9b-1d2f-4a6b-8c0e-2f4a6c8e0b1d",
+                      "entityName": "luis@example.test",
+                      "createdAt": "2026-10-21T15:00:00.000Z",
+                      "result": "SUCCESS",
+                      "reason": null,
+                      "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d",
+                      "before": null,
+                      "after": {
+                        "roles": [
+                          "SYSTEM_ADMIN"
+                        ]
+                      }
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "pageSize": 25,
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Consultar auditoría paginada según permisos y RLS; fechas con zona horaria",
+        "tags": [
+          "Audit"
+        ]
+      }
+    },
+    "/api/v1/audit-events/catalog": {
+      "get": {
+        "operationId": "AuditController_catalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditCatalogResponse"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "action": "TENANT_SUSPENDED",
+                      "module": "ORGANIZATIONS",
+                      "reasonRequired": true
+                    },
+                    {
+                      "action": "LOGIN",
+                      "module": "SECURITY",
+                      "reasonRequired": false
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Catálogo estable de acciones de auditoría",
+        "tags": [
+          "Audit"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "SGEn Backend API",
+    "description": "Base D0/D1: autenticación local y organizaciones. Contrato para integración frontend.\n\n## Sessions\n\n- Tokens travel only in httpOnly cookies. JSON bodies never carry them; the only token fields are csrfToken and challengeToken.\n- The access token lasts 10 minutes. Renew it with POST /auth/refresh before it expires, or after a 401 as described in Retries.\n- Every request that changes state (POST, PUT, PATCH, DELETE) sends X-CSRF-Token with the latest csrfToken from GET /auth/csrf, login or refresh. After a page reload, call GET /auth/csrf to get the token again.\n\n## Retries\n\n- 401 AUTHENTICATION_REQUIRED or SESSION_INVALID on any operation except POST /auth/login, POST /auth/mfa/verify and POST /auth/refresh: call POST /auth/refresh once. If it answers 200, repeat the original request once. If it fails, go to the login page. The access cookie expires with its token after 10 minutes, so an expired session usually shows up as AUTHENTICATION_REQUIRED while the refresh cookie is still valid.\n- 403 CSRF_INVALID: call GET /auth/csrf, then repeat the request once.\n- 429 RATE_LIMITED: do not retry automatically. POST requests to /auth and /invitations are limited to 60 per minute per IP.\n- 503: let the user retry. Never retry a request that failed with another 4xx code.\n",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sgen_at",
+        "description": "Session cookies, all httpOnly and SameSite=Lax. Access token: sgen_at (__Host-sgen_at with COOKIE_SECURE), path /, 10 minutes. Refresh token: sgen_rt (__Secure-sgen_rt with COOKIE_SECURE), path /api/v1/auth/refresh only, valid until the session ends. CSRF: sgen_csrf (__Host-sgen_csrf with COOKIE_SECURE), path /, 12 hours. Send the same value from the JSON csrfToken as X-CSRF-Token."
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "admin.alpha@example.test"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "VerifyMfaDto": {
+        "type": "object",
+        "properties": {
+          "challengeToken": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "challengeToken",
+          "code"
+        ]
+      },
+      "UpdateSettingsDto": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "maxLength": 10,
+            "example": "es-MX"
+          },
+          "theme": {
+            "type": "string",
+            "maxLength": 20,
+            "example": "dark"
+          }
+        }
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "format": "password"
+          },
+          "newPassword": {
+            "type": "string",
+            "format": "password",
+            "minLength": 15,
+            "maxLength": 128,
+            "description": "Unicode code points; input is never trimmed or normalized."
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "CreateOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string",
+            "example": "Alpha SA de CV",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "rfc": {
+            "type": "string",
+            "example": "AAA010101AA1",
+            "pattern": "^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$",
+            "description": "Trimmed and converted to upper case before validation."
+          },
+          "industrySector": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "taxAddress": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "mfaRequired": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "legalName",
+          "rfc"
+        ]
+      },
+      "UpdateOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Only a platform superadmin can change it."
+          },
+          "industrySector": {
+            "type": "string",
+            "maxLength": 150,
+            "nullable": true,
+            "description": "null or blank clears it."
+          },
+          "taxAddress": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000,
+            "description": "Can change but cannot be cleared."
+          }
+        }
+      },
+      "OrganizationStatusDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Why the status changes. Saved in the audit log."
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "UpdateSecurityPolicyDto": {
+        "type": "object",
+        "properties": {
+          "mfaRequired": {
+            "type": "boolean"
+          },
+          "passwordMinLength": {
+            "type": "number",
+            "minimum": 15,
+            "maximum": 128
+          },
+          "passwordExpiryDays": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 730,
+            "description": "NULL means no periodic expiry; a positive value explicitly enables the exception."
+          },
+          "sessionMaxHours": {
+            "type": "number"
+          },
+          "idleTimeoutMinutes": {
+            "type": "number"
+          },
+          "maxConcurrentSessions": {
+            "type": "number"
+          },
+          "lockoutEnabled": {
+            "type": "boolean"
+          },
+          "maxLoginAttempts": {
+            "type": "number"
+          },
+          "attemptWindowSeconds": {
+            "type": "number"
+          },
+          "lockoutDurationMinutes": {
+            "type": "number"
+          },
+          "invitationExpiryHours": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateInvitationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "admin@empresa.mx"
+          },
+          "roles": {
+            "example": [
+              "SYSTEM_ADMIN"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "email",
+          "roles"
+        ]
+      },
+      "InvitationTokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "AcceptInvitationDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string",
+            "description": "Required for a new account"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "Required for a new account"
+          },
+          "mfa": {
+            "type": "string",
+            "enum": [
+              "ENABLE",
+              "WAIVE"
+            ],
+            "description": "Only when the organization does not require MFA"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "Identity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "ENEGENCE_STAFF",
+              "SERVICE",
+              "EXTERNAL_AUDITOR"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 10,
+            "nullable": true,
+            "description": "null until PATCH /auth/me/settings sets it."
+          },
+          "theme": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true,
+            "description": "null until PATCH /auth/me/settings sets it."
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "type",
+          "active",
+          "language",
+          "theme"
+        ]
+      },
+      "SessionContext": {
+        "type": "object",
+        "properties": {
+          "accessMode": {
+            "type": "string",
+            "enum": [
+              "NO_CONTEXT",
+              "TENANT_USER",
+              "PLATFORM_SUPERADMIN"
+            ],
+            "description": "TENANT_USER: acting inside one organization. PLATFORM_SUPERADMIN: platform administration, organization: null. NO_CONTEXT: not issued by current flows (an identity without active memberships gets 401 INVALID_CREDENTIALS). Fixed shape: organization: null, permissions: []. Reserved, not implemented: DELEGATED_SUPPORT, CORPORATE_READ_ONLY. Clients must treat an unknown accessMode as NO_CONTEXT."
+          },
+          "organization": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "legalName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "legalName"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "accessMode",
+          "organization"
+        ]
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "context": {
+            "$ref": "#/components/schemas/SessionContext"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "example": 600
+          },
+          "csrfToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "identity",
+          "context",
+          "expiresIn",
+          "csrfToken"
+        ]
+      },
+      "CurrentSession": {
+        "type": "object",
+        "properties": {
+          "identity": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "context": {
+            "$ref": "#/components/schemas/SessionContext"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "module": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "module",
+                "code"
+              ]
+            }
+          },
+          "password": {
+            "$ref": "#/components/schemas/PasswordState"
+          }
+        },
+        "required": [
+          "identity",
+          "context",
+          "permissions",
+          "password"
+        ]
+      },
+      "PasswordState": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "type": "object",
+            "properties": {
+              "minimumLength": {
+                "type": "integer",
+                "minimum": 15,
+                "maximum": 128
+              },
+              "maximumLength": {
+                "type": "integer",
+                "enum": [
+                  128
+                ]
+              },
+              "historyCount": {
+                "type": "integer",
+                "minimum": 5,
+                "maximum": 24
+              },
+              "expiryDays": {
+                "type": "integer",
+                "nullable": true
+              },
+              "lengthUnit": {
+                "type": "string",
+                "enum": [
+                  "UNICODE_CODE_POINTS"
+                ]
+              }
+            },
+            "required": [
+              "minimumLength",
+              "maximumLength",
+              "historyCount",
+              "expiryDays",
+              "lengthUnit"
+            ]
+          },
+          "changeRequired": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "daysRemaining": {
+            "type": "integer",
+            "nullable": true
+          },
+          "expiresSoon": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "policy",
+          "changeRequired",
+          "expiresAt",
+          "daysRemaining",
+          "expiresSoon"
+        ]
+      },
+      "PasswordStateResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PasswordState"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "PageMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of items that match the filters, on all pages."
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "total"
+        ]
+      },
+      "Organization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "legalName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "rfc": {
+            "type": "string",
+            "pattern": "^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$",
+            "description": "Immutable after the organization is created."
+          },
+          "industrySector": {
+            "type": "string",
+            "maxLength": 150,
+            "nullable": true
+          },
+          "taxAddress": {
+            "type": "string",
+            "maxLength": 4000,
+            "nullable": true
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "legalName",
+          "rfc",
+          "industrySector",
+          "taxAddress",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SecurityPolicy": {
+        "type": "object",
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mfaRequired": {
+            "type": "boolean"
+          },
+          "mfaAllowedMethods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "passwordMinLength": {
+            "type": "integer"
+          },
+          "passwordExpiryDays": {
+            "type": "integer",
+            "nullable": true
+          },
+          "sessionMaxHours": {
+            "type": "integer"
+          },
+          "idleTimeoutMinutes": {
+            "type": "integer"
+          },
+          "maxConcurrentSessions": {
+            "type": "integer"
+          },
+          "lockoutEnabled": {
+            "type": "boolean"
+          },
+          "maxLoginAttempts": {
+            "type": "integer"
+          },
+          "attemptWindowSeconds": {
+            "type": "integer"
+          },
+          "lockoutDurationMinutes": {
+            "type": "integer"
+          },
+          "invitationExpiryHours": {
+            "type": "integer"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "organizationId",
+          "mfaRequired",
+          "mfaAllowedMethods",
+          "passwordMinLength",
+          "passwordExpiryDays",
+          "sessionMaxHours",
+          "idleTimeoutMinutes",
+          "maxConcurrentSessions",
+          "lockoutEnabled",
+          "maxLoginAttempts",
+          "attemptWindowSeconds",
+          "lockoutDurationMinutes",
+          "invitationExpiryHours",
+          "updatedAt"
+        ]
+      },
+      "MfaChallenge": {
+        "type": "object",
+        "properties": {
+          "mfaRequired": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "EMAIL"
+            ]
+          },
+          "challengeToken": {
+            "type": "string"
+          },
+          "sentTo": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "mfaRequired",
+          "method",
+          "challengeToken",
+          "sentTo",
+          "expiresAt"
+        ]
+      },
+      "Invitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "roles",
+          "expiresAt",
+          "status"
+        ]
+      },
+      "InvitationDetails": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "ACCEPTED",
+              "REVOKED",
+              "EXPIRED"
+            ]
+          },
+          "hasAccount": {
+            "type": "boolean"
+          },
+          "hasMfa": {
+            "type": "boolean"
+          },
+          "mfaRequired": {
+            "type": "boolean"
+          },
+          "passwordMinLength": {
+            "type": "integer"
+          },
+          "passwordExpiryDays": {
+            "type": "integer",
+            "nullable": true
+          },
+          "passwordHistoryCount": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 24
+          },
+          "mfaAllowedMethods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "authMode": {
+            "type": "string",
+            "enum": [
+              "LOCAL",
+              "HYBRID",
+              "FEDERATED"
+            ]
+          },
+          "mfaWaiver": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "version",
+              "text"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "legalName",
+          "email",
+          "expiresAt",
+          "status",
+          "hasAccount",
+          "hasMfa",
+          "mfaRequired",
+          "passwordMinLength",
+          "passwordExpiryDays",
+          "passwordHistoryCount",
+          "mfaAllowedMethods",
+          "authMode",
+          "mfaWaiver"
+        ]
+      },
+      "AcceptedInvitation": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "legalName": {
+            "type": "string"
+          },
+          "mfa": {
+            "type": "string",
+            "enum": [
+              "ENABLED",
+              "WAIVED"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "legalName",
+          "mfa"
+        ]
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Session"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "MfaChallengeResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MfaChallenge"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "InvitationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Invitation"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "InvitationDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/InvitationDetails"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "AcceptedInvitationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AcceptedInvitation"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "CurrentSessionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CurrentSession"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "OrganizationResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Organization"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "SecurityPolicyResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SecurityPolicy"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "OrganizationListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Organization"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "CsrfResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "csrfToken": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "csrfToken"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "success"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "SettingsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "success"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ok"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "AuditEventListResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "actorId",
+                "actorName",
+                "scope",
+                "tenantId",
+                "tenantName",
+                "groupId",
+                "groupName",
+                "action",
+                "module",
+                "entityType",
+                "entityId",
+                "entityName",
+                "createdAt",
+                "result",
+                "reason",
+                "requestId",
+                "before",
+                "after"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "actorId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "actorName": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "tenantId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "tenantName": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "groupId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "groupName": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "scope": {
+                  "type": "string",
+                  "enum": [
+                    "PLATFORM",
+                    "TENANT",
+                    "CORPORATE"
+                  ]
+                },
+                "action": {
+                  "type": "string"
+                },
+                "module": {
+                  "type": "string"
+                },
+                "entityType": {
+                  "type": "string"
+                },
+                "entityId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "nullable": true
+                },
+                "entityName": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "result": {
+                  "type": "string",
+                  "enum": [
+                    "SUCCESS",
+                    "DENIED",
+                    "FAILURE"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "requestId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "before": {
+                  "type": "object",
+                  "nullable": true,
+                  "additionalProperties": true
+                },
+                "after": {
+                  "type": "object",
+                  "nullable": true,
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
+      },
+      "AuditCatalogResponse": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "action",
+                "module",
+                "reasonRequired"
+              ],
+              "properties": {
+                "action": {
+                  "type": "string"
+                },
+                "module": {
+                  "type": "string"
+                },
+                "reasonRequired": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "VALIDATION_FAILED",
+          "MFA_CHOICE_REQUIRED",
+          "AUTHENTICATION_REQUIRED",
+          "INVALID_CREDENTIALS",
+          "INVALID_MFA_CODE",
+          "MFA_CHALLENGE_INVALID",
+          "SESSION_INVALID",
+          "CSRF_INVALID",
+          "CURRENT_PASSWORD_INVALID",
+          "FEDERATED_LOGIN_REQUIRED",
+          "PASSWORD_CHANGE_BLOCKED",
+          "PASSWORD_CHANGE_REQUIRED",
+          "PERMISSION_REQUIRED",
+          "PLATFORM_REQUIRED",
+          "ACCESS_DENIED",
+          "NOT_FOUND",
+          "ORGANIZATION_NOT_FOUND",
+          "INVITATION_NOT_FOUND",
+          "METHOD_NOT_ALLOWED",
+          "CONFLICT",
+          "DUPLICATE_RECORD",
+          "ACCOUNT_EXISTS",
+          "INVITATION_ALREADY_PENDING",
+          "INVITATION_NOT_PENDING",
+          "MFA_POLICY_CONFLICT",
+          "POLICY_MISSING",
+          "TENANT_SELECTION_REQUIRED",
+          "INVITATION_EXPIRED",
+          "PAYLOAD_TOO_LARGE",
+          "INVALID_DATA",
+          "INVALID_ROLES",
+          "MFA_REQUIRED_BY_ORGANIZATION",
+          "PASSWORD_COMPROMISED",
+          "PASSWORD_INVALID_UNICODE",
+          "PASSWORD_REUSED",
+          "PASSWORD_TOO_LONG",
+          "PASSWORD_TOO_SHORT",
+          "RATE_LIMITED",
+          "INTERNAL_ERROR",
+          "DATABASE_NOT_READY",
+          "INVALID_DATABASE_ROLE",
+          "PASSWORD_CHECK_UNAVAILABLE"
+        ],
+        "description": "Stable error code. Clients must handle an unknown code by its HTTP status."
+      },
+      "TenantOption": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "legalName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenantId",
+          "legalName"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "$ref": "#/components/schemas/ErrorCode"
+              },
+              "message": {
+                "type": "string",
+                "description": "Spanish text for the user. Do not branch on it."
+              },
+              "details": {
+                "description": "Optional, depends on the code. TENANT_SELECTION_REQUIRED: the organizations to choose from. VALIDATION_FAILED: one message per invalid field. INVALID_MFA_CODE: attempts left for this challenge. PASSWORD_TOO_SHORT / PASSWORD_TOO_LONG: the limit that applies.",
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TenantOption"
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "attemptsLeft": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "attemptsLeft"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "minimumLength": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "minimumLength"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "maximumLength": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "maximumLength"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "error",
+          "requestId"
+        ]
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "VALIDATION_FAILED: Fix the request. details may list the invalid fields as messages.\n\nMFA_CHOICE_REQUIRED: Ask the user to enable MFA or to accept the waiver, then retry.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "VALIDATION_FAILED": {
+                "value": {
+                  "error": {
+                    "code": "VALIDATION_FAILED",
+                    "message": "La solicitud contiene datos inválidos.",
+                    "details": [
+                      "email must be an email"
+                    ]
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "AUTHENTICATION_REQUIRED: Call POST /auth/refresh once and repeat the request. If refresh fails, send the user to the login page.\n\nINVALID_CREDENTIALS: Show a generic login error. It does not say which value was wrong or whether the account exists.\n\nINVALID_MFA_CODE: Let the user type the code again while the challenge is valid.\n\nMFA_CHALLENGE_INVALID: The challenge expired or ran out of attempts. Start a new login.\n\nSESSION_INVALID: Call POST /auth/refresh once and repeat the request. If refresh fails, or this came from refresh itself, the session ended (revoked, expired or organization suspended): send the user to the login page.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "INVALID_CREDENTIALS": {
+                "value": {
+                  "error": {
+                    "code": "INVALID_CREDENTIALS",
+                    "message": "Credenciales inválidas o acceso no disponible."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              },
+              "SESSION_INVALID": {
+                "value": {
+                  "error": {
+                    "code": "SESSION_INVALID",
+                    "message": "No existe una sesión renovable."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              },
+              "INVALID_MFA_CODE": {
+                "value": {
+                  "error": {
+                    "code": "INVALID_MFA_CODE",
+                    "message": "El código no es correcto.",
+                    "details": {
+                      "attemptsLeft": 3
+                    }
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "CSRF_INVALID: Get a new token from GET /auth/csrf and retry the request once.\n\nCURRENT_PASSWORD_INVALID: Ask the user to type the current password again.\n\nFEDERATED_LOGIN_REQUIRED: The organization uses federated login. Local login is not allowed.\n\nPASSWORD_CHANGE_BLOCKED: The password cannot be changed now. Show the message and stop.\n\nPASSWORD_CHANGE_REQUIRED: Send the user to the change password page before any other operation.\n\nPERMISSION_REQUIRED: Hide or disable the action. The user lacks the permission.\n\nPLATFORM_REQUIRED: Only platform administrators can do this. Hide the action.\n\nACCESS_DENIED: The operation is not allowed in the current context.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "CSRF_INVALID": {
+                "value": {
+                  "error": {
+                    "code": "CSRF_INVALID",
+                    "message": "Origen no permitido."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              },
+              "PERMISSION_REQUIRED": {
+                "value": {
+                  "error": {
+                    "code": "PERMISSION_REQUIRED",
+                    "message": "No tienes permiso para realizar esta operación."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "NOT_FOUND: Show a not found page.\n\nORGANIZATION_NOT_FOUND: The organization does not exist or is not visible to the user.\n\nINVITATION_NOT_FOUND: The invitation link is not valid. Show the message and stop.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "ORGANIZATION_NOT_FOUND": {
+                "value": {
+                  "error": {
+                    "code": "ORGANIZATION_NOT_FOUND",
+                    "message": "Organización no encontrada."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "CONFLICT: Reload the resource and let the user try again.\n\nDUPLICATE_RECORD: A record with the same unique value exists (for example the RFC).\n\nACCOUNT_EXISTS: The email already has an account. Accept the invitation without a password.\n\nINVITATION_ALREADY_PENDING: A pending invitation exists for this email. Do not send another.\n\nINVITATION_NOT_PENDING: The invitation was used or revoked. Show the message and stop.\n\nMFA_POLICY_CONFLICT: The MFA policy has no usable method. An administrator must fix it.\n\nPOLICY_MISSING: The organization has no security policy. An administrator must fix it.\n\nTENANT_SELECTION_REQUIRED: Show the organizations in details and repeat the login with the chosen tenantId.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "TENANT_SELECTION_REQUIRED": {
+                "value": {
+                  "error": {
+                    "code": "TENANT_SELECTION_REQUIRED",
+                    "message": "Selecciona una organización.",
+                    "details": [
+                      {
+                        "tenantId": "6f1c2a7e-3b9d-4c1e-8a2f-0d5b7e9c1a34",
+                        "legalName": "Alpha Energía S.A. de C.V."
+                      },
+                      {
+                        "tenantId": "c2d4e6f8-1a3b-4c5d-8e7f-9a0b1c2d3e4f",
+                        "legalName": "Beta Solar S.A.P.I. de C.V."
+                      }
+                    ]
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error410": {
+        "description": "INVITATION_EXPIRED: The invitation expired. Ask for a new one.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "INVITATION_EXPIRED": {
+                "value": {
+                  "error": {
+                    "code": "INVITATION_EXPIRED",
+                    "message": "La invitación venció."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error422": {
+        "description": "INVALID_DATA: The data breaks a domain rule. Show the message.\n\nINVALID_ROLES: Choose current organization roles only.\n\nMFA_REQUIRED_BY_ORGANIZATION: The organization requires MFA. The waiver is not allowed.\n\nPASSWORD_COMPROMISED: Ask for a different password.\n\nPASSWORD_INVALID_UNICODE: Ask for a password without invalid Unicode characters.\n\nPASSWORD_REUSED: Ask for a password not used before.\n\nPASSWORD_TOO_LONG: Ask for a shorter password (see the password policy).\n\nPASSWORD_TOO_SHORT: Ask for a longer password (see the password policy).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "PASSWORD_TOO_SHORT": {
+                "value": {
+                  "error": {
+                    "code": "PASSWORD_TOO_SHORT",
+                    "message": "La contraseña no cumple la longitud mínima.",
+                    "details": {
+                      "minimumLength": 15
+                    }
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              },
+              "PASSWORD_TOO_LONG": {
+                "value": {
+                  "error": {
+                    "code": "PASSWORD_TOO_LONG",
+                    "message": "La contraseña supera la longitud máxima.",
+                    "details": {
+                      "maximumLength": 128
+                    }
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error429": {
+        "description": "RATE_LIMITED: Wait before retrying. Do not retry automatically in a loop.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "RATE_LIMITED": {
+                "value": {
+                  "error": {
+                    "code": "RATE_LIMITED",
+                    "message": "Intenta de nuevo más tarde."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error500": {
+        "description": "INTERNAL_ERROR: Show a generic error with the requestId for support.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "INTERNAL_ERROR": {
+                "value": {
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "No fue posible completar la operación."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error503": {
+        "description": "DATABASE_NOT_READY: The service is starting. Retry later.\n\nINVALID_DATABASE_ROLE: Server misconfiguration. Show a generic error with the requestId.\n\nPASSWORD_CHECK_UNAVAILABLE: The password check is not available. Retry in a few moments.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "PASSWORD_CHECK_UNAVAILABLE": {
+                "value": {
+                  "error": {
+                    "code": "PASSWORD_CHECK_UNAVAILABLE",
+                    "message": "No fue posible comprobar la contraseña. Intenta de nuevo en unos momentos."
+                  },
+                  "requestId": "9a7d3c1e-2b4f-4e6a-8c0d-5f1b3a7e9c2d"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
