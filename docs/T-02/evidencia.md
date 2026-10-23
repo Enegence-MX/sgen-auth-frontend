@@ -28,7 +28,7 @@ Alineación de `sgen-auth-frontend` con el contrato del backend (`sgen-auth-back
 ## Resultados
 
 - `npm run check`: lint, tipos, pruebas y build en verde. Pruebas: 71 en `develop`, 153 en la rama.
-- `npm run contract:check`: la copia coincide con `sgen-auth-backend/docs/openapi.json` (`dae4264`). Con un archivo modificado termina con código 1.
+- `npm run contract:check`: la copia coincide con `sgen-auth-backend/docs/openapi.json` (`4c1aef7`). Con un archivo modificado termina con código 1.
 
 ## Pendiente
 
