@@ -93,9 +93,7 @@ export function SecurityConsolePage() {
   }>()
   const [savingPolicy, setSavingPolicy] = useState(false)
   const [policySaveError, setPolicySaveError] = useState<unknown>()
-  const [authModePreview, setAuthModePreview] = useState<'LOCAL' | 'HYBRID' | 'FEDERATED'>('HYBRID')
   const [allowMfaOptOutPreview, setAllowMfaOptOutPreview] = useState(false)
-  const [federatedMfaModePreview, setFederatedMfaModePreview] = useState('REQUIRE_IDP_EVIDENCE')
 
   const policy = policyResource.value
   const tenantKey = organizationId ?? ''
@@ -230,16 +228,19 @@ export function SecurityConsolePage() {
           <h3 className="m-0 mb-4 font-heading text-base font-semibold text-ink">{t('securityConsole.authenticationMode')}</h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {(['LOCAL', 'HYBRID', 'FEDERATED'] as const).map((mode) => {
-              const selected = authModePreview === mode
+              const available = mode === 'LOCAL'
               return (
                 <button
                   key={mode}
                   type="button"
-                  aria-pressed={selected}
-                  onClick={() => setAuthModePreview(mode)}
-                  className={`min-h-20 cursor-pointer rounded-control border-2 border-solid p-3 text-left transition-colors ${selected ? 'border-brand bg-brand-soft' : 'border-line bg-panel hover:bg-subtle'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand`}
+                  aria-pressed={available}
+                  disabled={!available}
+                  className={`min-h-20 rounded-control border-2 border-solid p-3 text-left ${available ? 'border-brand bg-brand-soft' : 'cursor-not-allowed border-line bg-panel opacity-60'}`}
                 >
-                  <span className="block text-sm font-bold text-ink">{t(`securityConsole.authMode.${mode}`)}</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink">
+                    {t(`securityConsole.authMode.${mode}`)}
+                    {!available && <Badge variant="neutral">{t('securityConsole.comingSoon')}</Badge>}
+                  </span>
                   <span className="mt-1 block text-xs leading-relaxed text-body">{t(`securityConsole.authModeDescription.${mode}`)}</span>
                 </button>
               )
@@ -332,9 +333,9 @@ export function SecurityConsolePage() {
                 <Switch label={t('securityConsole.allowMfaOptOut')} hideLabel checked={allowMfaOptOutPreview} onChange={(event) => setAllowMfaOptOutPreview(event.target.checked)} />
               </div>
               <fieldset className="m-0 grid gap-2 border-0 p-0">
-                <legend className="mb-2 text-sm font-semibold text-ink">{t('securityConsole.federatedMfa')}</legend>
+                <legend className="mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-ink">{t('securityConsole.federatedMfa')}<Badge variant="neutral">{t('securityConsole.comingSoon')}</Badge></legend>
                 {(['TRUST_IDP', 'REQUIRE_IDP_EVIDENCE', 'REQUIRE_SGEN_MFA'] as const).map((mode) => (
-                  <Radio key={mode} name="federated-mfa-mode" checked={federatedMfaModePreview === mode} onChange={() => setFederatedMfaModePreview(mode)} label={t(`securityConsole.federatedMfaMode.${mode}.title`)} description={t(`securityConsole.federatedMfaMode.${mode}.description`)} containerClassName="rounded-control border border-solid border-line bg-panel p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft" />
+                  <Radio key={mode} name="federated-mfa-mode" disabled checked={false} readOnly label={t(`securityConsole.federatedMfaMode.${mode}.title`)} description={t(`securityConsole.federatedMfaMode.${mode}.description`)} containerClassName="rounded-control border border-solid border-line bg-panel p-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft" />
                 ))}
               </fieldset>
             </div>

@@ -182,6 +182,7 @@ export const en = {
     groups: 'Group mapping',
     audit: 'Audit log',
     policyDescription: 'Configure authentication, passwords, MFA and session controls.',
+    comingSoon: 'Coming soon',
     authenticationMode: 'Authentication mode',
     mode: 'Mode',
     authMode: {

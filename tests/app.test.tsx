@@ -85,11 +85,13 @@ describe('current backend flows', () => {
     expect(screen.queryByLabelText('Histórico sin reúso')).not.toBeInTheDocument()
     expect(screen.getByText('Código por correo')).toBeInTheDocument()
     expect(screen.getByText(/Aplicación autenticadora/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /HÍBRIDO/ })).toHaveAttribute('aria-pressed', 'true')
-    await user.click(screen.getByRole('button', { name: /FEDERADO/ }))
-    expect(screen.getByRole('button', { name: /FEDERADO/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /LOCAL/ })).toHaveAttribute('aria-pressed', 'true')
+    for (const mode of [/HÍBRIDO/, /FEDERADO/]) {
+      expect(screen.getByRole('button', { name: mode })).toBeDisabled()
+      expect(screen.getByRole('button', { name: mode })).toHaveTextContent('Próximamente')
+    }
+    expect(screen.getByRole('radio', { name: /CONFIAR EN EL IdP/ })).toBeDisabled()
     await user.click(screen.getByRole('switch', { name: 'Permitir opt-out con deslinde' }))
-    await user.click(screen.getByRole('radio', { name: /CONFIAR EN EL IdP/ }))
     expect(screen.queryByText(/SMS/i)).not.toBeInTheDocument()
     await user.click(screen.getByRole('switch', { name: 'Exigir MFA' }))
     await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))

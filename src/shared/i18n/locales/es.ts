@@ -188,6 +188,7 @@ export const es = {
     groups: 'Mapeo de grupos',
     audit: 'Bitácora de auditoría',
     policyDescription: 'Configura autenticación, contraseñas, MFA y controles de sesión.',
+    comingSoon: 'Próximamente',
     authenticationMode: 'Modo de autenticación',
     mode: 'Modo',
     authMode: {
